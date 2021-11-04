@@ -6,5 +6,11 @@ Then running this script to install pikvm.
 Install scripts is fork from @srepac rasbian pikvm install script.
 
 Original Script [https://kvmnerds.com/RPiKVM/install-pikvm-raspbian.sh]
-
-You should modify your dtb file to enable dtb feature.
+## Step 1
+- Flash armbian debian buster for your tv box or π
+## Step 2
+- Modify your dtb file to enable dtb feature.
+## Step 3
+git clone https://github.com/xe5700/kvmd-armbian.git
+cd kvmd-armbian
+./install-amglogic.sh
