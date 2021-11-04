@@ -56,8 +56,8 @@ kvmd:
             device: /dev/kvmd-hid-mouse-alt  # allow absolute/relative mouse mode
     msd:
         type: disabled
-	atx:
-	    type: disabled
+	  atx:
+	      type: disabled
     streamer:
         forever: true
         cmd_append:
@@ -433,9 +433,12 @@ armbian-packages() {
   mkdir -p /opt/vc/bin/
   old=$(pwd)
   cd /opt/vc/bin
-  cp $old/armbian-sysinfo ./
-  cp $old/vcgencmd ./
+  # Install vcgencmd for armbian platform
+  cp -rf $old/armbian/opt/* ./
   cd $old
+  cp -rf armbian/udev /etc/
+
+  # 
 }	#end armbian-packages
 
 ### MAIN STARTS HERE ###
