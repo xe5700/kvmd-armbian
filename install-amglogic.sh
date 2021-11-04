@@ -230,12 +230,12 @@ enable-kvmd-svcs() {
 build-ustreamer() {
   printf "\n\n-> Building ustreamer\n\n"
   # Install packages needed for building ustreamer source
-  echo "apt install -y libevent-dev libjpeg8-dev libbsd-dev libraspberrypi-dev libgpiod-dev"
-  apt install -y libevent-dev libjpeg8-dev libbsd-dev libraspberrypi-dev libgpiod-dev > /dev/null 
+  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev "
+  apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev
 
   # Download ustreamer source and build it
   cd /tmp
-  git clone --depth=1 https://github.com/pikvm/ustreamer
+  git clone --depth https://github.com/pikvm/ustreamer=1
   cd ustreamer/
   if [[ $( uname -m ) == "aarch64" ]]; then
     make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
