@@ -60,8 +60,9 @@ raw_mirror(){
 clone_mirror
 raw_mirror
 
-cd /tmp
+appPath=$(dirname $0)
 
-wget "${url_raw2}xe5700/kvmd-armbian/master/install-amglogic.sh" -O install.sh
+cd $appPath
 
-sed "s/https:\\/\\/raw.githubusercontent.com\\//$url_raw/" install.sh | sed "s/https:\\/\\/github.com\\//$url_clone/"
+cat install-amglogic.sh | sed "s/https:\\/\\/raw.githubusercontent.com\\//$url_raw/" | sed "s/https:\\/\\/github.com\\//$url_clone/" | tee /tmp/kvmd-install.sh > /dev/null
+chmod +x /tmp/kvmd-install.sh

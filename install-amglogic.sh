@@ -429,8 +429,12 @@ fix-motd() {
 } # end fix-motd
 
 # 安装armbian的包
-armbian-packages(){
-
+armbian-packages() {
+  mkdir -p /opt/vc/bin/
+  old=$(pwd)
+  cd /opt/vc/bin
+  wget 
+  cd $old
 }	#end armbian-packages
 
 ### MAIN STARTS HERE ###
