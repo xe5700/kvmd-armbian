@@ -175,7 +175,7 @@ get-platform() {
     # amglogic tv box only has usb port, use usb dongle.
 	# printf "Choose which capture device you will use:\n\n  1 - USB dongle\n  2 - v2 CSI\n  3 - V3 HAT\n" 
     # read -p "Please type [1-3]: " capture
-	$capture = 1;
+	capture=1;
     case $capture in 
       1) platform="kvmd-platform-v2-hdmiusb-rpi4"; tryagain=0;;
       2) platform="kvmd-platform-v2-hdmi-rpi4"; tryagain=0;;

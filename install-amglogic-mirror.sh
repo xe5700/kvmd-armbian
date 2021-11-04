@@ -18,13 +18,12 @@ clone_mirror(){
 	"
 	tryagain=1
 	while [ $tryagain -eq 1 ]; do
-		$capture = 1;
 		read -p "Please type [0-3]: " capture
 		case $capture in 
-		0) url_clone="https:\\/\\/github.com\\/";;
-		1) url_clone="https:\\/\\/hub.fastgit.org\\/";;
-		2) url_clone="https:\\/\\/gitclone.com\\/github.com\\/";;
-		3) url_clone="https:\\/\\/github.com.cnpmjs.org\\/";;
+		0) url_clone="https:\\/\\/github.com\\/"; tryagain=0;;
+		1) url_clone="https:\\/\\/hub.fastgit.org\\/"; tryagain=0;;
+		2) url_clone="https:\\/\\/gitclone.com\\/github.com\\/"; tryagain=0;;
+		3) url_clone="https:\\/\\/github.com.cnpmjs.org\\/"; tryagain=0;;
 		*) printf "\nTry again.\n"; tryagain=1;;
 		esac
 		echo
@@ -44,13 +43,12 @@ raw_mirror(){
 	#1. https://cdn.jsdelivr.net [Global]
 	tryagain=1
 	while [ $tryagain -eq 1 ]; do
-		$capture = 1;
 		read -p "Please type [0-3]: " capture
 		case $capture in 
-		0) url_raw="https:\\/\\/raw.githubusercontent.com\\/";url_raw2="https://raw.githubusercontent.com/";;
-		1) url_raw="https:\\/\\/raw.fastgit.org\\/";url_raw2="https://raw.fastgit.org/";;
-		2) url_raw="https:\\/\\/cdn.staticaly.com\\/gh\\/";url_raw2="https://cdn.staticaly.com/gh/";;
-		3) url_raw="https:\\/\\/ghproxy.com\\/https:\\/\\/raw.githubusercontent.com\\/";url_raw2="https://ghproxy.com/https://raw.githubusercontent.com/";;
+		0) url_raw="https:\\/\\/raw.githubusercontent.com\\/";url_raw2="https://raw.githubusercontent.com/"; tryagain=0;;
+		1) url_raw="https:\\/\\/raw.fastgit.org\\/";url_raw2="https://raw.fastgit.org/"; tryagain=0;;
+		2) url_raw="https:\\/\\/cdn.staticaly.com\\/gh\\/";url_raw2="https://cdn.staticaly.com/gh/"; tryagain=0;;
+		3) url_raw="https:\\/\\/ghproxy.com\\/https:\\/\\/raw.githubusercontent.com\\/";url_raw2="https://ghproxy.com/https://raw.githubusercontent.com/"; tryagain=0;;
 		*) printf "\nTry again.\n"; tryagain=1;;
 		esac
 		echo
@@ -64,6 +62,6 @@ raw_mirror
 
 cd /tmp
 
-wget "${url_raw2}xe5700/kvmd-armbian/master/install-amglogic.sh" -o install.sh
+wget "${url_raw2}xe5700/kvmd-armbian/master/install-amglogic.sh" -O install.sh
 
-sed "s/https:\\/\\/raw.githubusercontent.com\\//$url_raw/" | sed "s/https:\\/\\/github.com\\//$url_clone/"
+sed "s/https:\\/\\/raw.githubusercontent.com\\//$url_raw/" install.sh | sed "s/https:\\/\\/github.com\\//$url_clone/"
