@@ -6,3 +6,5 @@ Then running this script to install pikvm.
 Install scripts is fork from @srepac rasbian pikvm install script.
 
 Original Script [https://kvmnerds.com/RPiKVM/install-pikvm-raspbian.sh]
+
+You should modify your dtb file to enable dtb feature.

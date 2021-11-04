@@ -433,7 +433,8 @@ armbian-packages() {
   mkdir -p /opt/vc/bin/
   old=$(pwd)
   cd /opt/vc/bin
-  wget 
+  cp $old/armbian-sysinfo ./
+  cp $old/vcgencmd ./
   cd $old
 }	#end armbian-packages
 
