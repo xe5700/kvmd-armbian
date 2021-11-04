@@ -19,6 +19,7 @@ clone_mirror(){
 	tryagain=1
 	while [ $tryagain -eq 1 ]; do
 		$capture = 1;
+		read -p "Please type [0-3]: " capture
 		case $capture in 
 		0) url_clone="https:\\/\\/github.com\\/";;
 		1) url_clone="https:\\/\\/hub.fastgit.org\\/";;
@@ -44,6 +45,7 @@ raw_mirror(){
 	tryagain=1
 	while [ $tryagain -eq 1 ]; do
 		$capture = 1;
+		read -p "Please type [0-3]: " capture
 		case $capture in 
 		0) url_raw="https:\\/\\/raw.githubusercontent.com\\/";url_raw2="https://raw.githubusercontent.com/";;
 		1) url_raw="https:\\/\\/raw.fastgit.org\\/";url_raw2="https://raw.fastgit.org/";;
