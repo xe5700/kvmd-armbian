@@ -17,7 +17,7 @@
 # Last change 20210818 1830 PDT
 # VER=1.0
 set +x
-PIKVMREPO="https://pikvm.org/repos/rpi4"
+PIKVMREPO="https://files.pikvm.org/repos/arch/rpi4"
 KVMDCACHE="/var/cache/kvmd"
 PKGINFO="${KVMDCACHE}/packages.txt"
 
@@ -121,12 +121,13 @@ boot-files() {
 
 # Armbian not support config.txt, remove it.
 
+      # amlogic does not support CSI, skip the following
       # add the tc358743 module to be loaded at boot for CSI
-      if [[ $( grep -w tc358743 /etc/modules | wc -l ) -eq 0 ]]; then
-        echo "tc358743" >> /etc/modules
-      fi
+      # if [[ $( grep -w tc358743 /etc/modules | wc -l ) -eq 0 ]]; then
+      #   echo "tc358743" >> /etc/modules
+      # fi
 
-      install-tc358743 
+      # install-tc358743 
 
     fi 
   fi  # end of check if entries are already in /boot/config.txt
