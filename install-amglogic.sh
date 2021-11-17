@@ -128,7 +128,7 @@ boot-files() {
       # fi
 
       # install-tc358743 
-
+      :
     fi 
   fi  # end of check if entries are already in /boot/config.txt
 
