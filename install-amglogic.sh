@@ -119,7 +119,7 @@ boot-files() {
 
     if [[ $( echo $platform | grep usb | wc -l ) -eq 1 ]]; then
 
-# Armbian not support config.txt, remove it.
+      # Armbian does not support config.txt, remove it.
 
       # amlogic does not support CSI, skip the following
       # add the tc358743 module to be loaded at boot for CSI
@@ -399,34 +399,15 @@ start-kvmd-svcs() {
   # 2. kvmd-otg is for OTG devices (keyboard/mouse, etc..)
   # 3. kvmd is the main daemon
   systemctl restart kvmd-nginx kvmd-otg kvmd-webterm kvmd 
-  #systemctl status kvmd-nginx kvmd-otg kvmd-webterm kvmd 
+  # systemctl status kvmd-nginx kvmd-otg kvmd-webterm kvmd 
 } # end start-kvmd-svcs
 
 fix-motd() { 
-  if [ $( grep pikvm /etc/motd | wc -l ) -eq 0 ]; then
-    cp /etc/motd /tmp/motd; rm /etc/motd
-
-    printf "
-         ____  ____  _        _  ____     ____  __
-        |  _ \|  _ \(_)      | |/ /\ \   / /  \/  |
-        | |_) | |_) | |  __  | ' /  \ \ / /| |\/| |
-        |  _ <|  __/| | (__) | . \   \ V / | |  | |
-        |_| \_\_|   |_|      |_|\_\   \_/  |_|  |_|
-
-    Welcome to Raspbian-KVM - Open Source IP-KVM based on Raspberry Pi
-    ____________________________________________________________________________
-
-    To prevent kernel messages from printing to the terminal use \"dmesg -n 1\".
-
-    To change KVM password use command \"kvmd-htpasswd set admin\".
-
-    Useful links:
-      * https://pikvm.org
-
-" > /etc/motd
-
-    cat /tmp/motd >> /etc/motd
-  fi
+  rm /etc/motd
+  cp armbian/armbian-motd /usr/bin/
+  sed -i 's/cat \/etc\/motd/armbian-motd/g' /lib/systemd/system/kvmd-webterm.service
+  systemctl daemon-reload
+  # systemctl restart kvmd-webterm
 } # end fix-motd
 
 # 安装armbian的包

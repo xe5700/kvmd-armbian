@@ -1,0 +1,5 @@
+#!/bin/sh
+/etc/update-motd.d/10-armbian-header
+/etc/update-motd.d/30-armbian-sysinfo
+/etc/update-motd.d/41-armbian-config
+
