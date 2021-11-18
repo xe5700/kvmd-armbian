@@ -56,8 +56,8 @@ kvmd:
             device: /dev/kvmd-hid-mouse-alt  # allow absolute/relative mouse mode
     msd:
         type: disabled
-	  atx:
-	      type: disabled
+    atx:
+        type: disabled
     streamer:
         forever: true
         cmd_append:
