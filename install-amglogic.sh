@@ -246,7 +246,7 @@ build-ustreamer() {
   make install
 
   # kvmd service is looking for /usr/bin/ustreamer   
-  ln -s /usr/local/bin/ustreamer* /usr/bin/
+  ln -s /usr/local/bin/ustreamer /usr/bin/
 } # end build-ustreamer 
 
 install-dependencies() {
@@ -265,12 +265,17 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git" )
 
   if [ ! -e /usr/bin/ttyd ]; then
     # Build and install ttyd
-	cd /tmp
-	apt-get install -y build-essential cmake git libjson-c-dev libwebsockets-dev
-    git clone --depth=1 https://github.com/tsl0922/ttyd.git
-	cd ttyd && mkdir build && cd build
-	cmake ..
-	make -j && make install
+    # cd /tmp
+    # apt-get install -y build-essential cmake git libjson-c-dev libwebsockets-dev
+    # git clone --depth=1 https://github.com/tsl0922/ttyd.git
+    # cd ttyd && mkdir build && cd build
+    # cmake ..
+    # make -j && make install
+    # Install binary from GitHub
+    arch=$(dpkg --print-architecture)
+    latest=$(curl -sL https://api.github.com/repos/tsl0922/ttyd/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+    wget "https://github.com/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -o /usr/bin/ttyd
+    chmod +x /usr/bin/ttyd
   fi
 
   if [ ! -e /usr/bin/ustreamer ]; then
