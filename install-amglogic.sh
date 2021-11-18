@@ -1,5 +1,6 @@
 #!/bin/bash
-# modify by xe5700 		2021-11-04	xe5700@outlook.com
+# modified by xe5700 		2021-11-04	xe5700@outlook.com
+# modified by NewbieOrange	2021-11-04
 # created by @srepac   08/09/2011   srepac@kvmnerds.com
 # Scripted Installer of Pi-KVM on Raspbian (32-bit) meant for RPi4
 #
@@ -273,7 +274,7 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git" )
     # make -j && make install
     # Install binary from GitHub
     arch=$(dpkg --print-architecture)
-    latest=$(curl -sL https://api.github.com/repos/tsl0922/ttyd/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+    latest=$(curl -sL https://api.github.com/repos/tsl0922/ttyd/releases/latest | jq -r ".tag_name")
     wget "https://github.com/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -o /usr/bin/ttyd
     chmod +x /usr/bin/ttyd
   fi
