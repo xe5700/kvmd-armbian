@@ -64,6 +64,6 @@ appPath=$(dirname $0)
 
 cd $appPath
 
-cat install-amglogic.sh | sed "s/https:\\/\\/raw.githubusercontent.com\\//$url_raw/" | sed "s/https:\\/\\/github.com\\//$url_clone/" | tee /tmp/kvmd-install.sh > /dev/null
+cat install.sh | sed "s/https:\\/\\/raw.githubusercontent.com\\//$url_raw/" | sed "s/https:\\/\\/github.com\\//$url_clone/" | tee /tmp/kvmd-install.sh > /dev/null
 chmod +x /tmp/kvmd-install.sh
 /tmp/kvmd-install.sh
