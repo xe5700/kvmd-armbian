@@ -21,6 +21,7 @@ set +x
 PIKVMREPO="https://files.pikvm.org/repos/arch/rpi4"
 KVMDCACHE="/var/cache/kvmd"
 PKGINFO="${KVMDCACHE}/packages.txt"
+APP_PATH=$(pwd)
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
   echo "usage:  $0 [-f]   where -f will force re-install new pikvm platform"
@@ -44,6 +45,7 @@ gen-ssl-certs() {
   openssl req -new -x509 -sha256 -nodes -key server.key -out server.crt -days 3650 \
         -subj "/C=US/ST=Denial/L=Denial/O=Pi-KVM/OU=Pi-KVM/CN=$(hostname)"
   cp server* /etc/kvmd/vnc/ssl/
+  cd ${APP_PATH}
 } # end gen-ssl-certs
 
 create-override() {
@@ -103,6 +105,7 @@ otg-devices() {
     cd /sys/kernel/config/usb_gadget/kvmd/functions
     mkdir hid.usb0  hid.usb1  hid.usb2  mass_storage.usb0
   fi
+  cd ${APP_PATH}
 } # end otg-device creation
 
 install-tc358743() {
@@ -207,6 +210,7 @@ install-kvmd-pkgs() {
     echo "-> Extracting package $i into /" >> $INSTLOG 
     tar xfJ $i
   done
+  cd ${APP_PATH}
 } # end install-kvmd-pkgs
 
 fix-udevrules() { 
@@ -275,16 +279,19 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git" )
     # Install binary from GitHub
     arch=$(dpkg --print-architecture)
     latest=$(curl -sL https://api.github.com/repos/tsl0922/ttyd/releases/latest | jq -r ".tag_name")
-    wget "https://github.com/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -o /usr/bin/ttyd
+    if [ $arch = arm64 ]; then
+      arch='aarch64'
+    fi 
+    wget "https://github.com/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
     chmod +x /usr/bin/ttyd
   fi
 
   if [ ! -e /usr/bin/ustreamer ]; then
     cd /tmp
-	apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7
+	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7
     ### required dependent packages for ustreamer ###
     build-ustreamer
-
+    cd ${APP_PATH}
   fi
 } # end install-dependencies
 
@@ -319,9 +326,26 @@ fix-nginx-symlinks() {
   python-pkg-dir
 
   if [ ! -e $PYTHONDIR/kvmd ]; then
-    ln -s /usr/lib/python3.9/site-packages/kvmd* ${PYTHONDIR}
+    # Debian python版本比 pikvm官方的低一些
+    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR}
   fi
 } # end fix-nginx-symlinks
+
+fix-python-symlinks(){
+    python-pkg-dir
+
+  if [ ! -e $PYTHONDIR/kvmd ]; then
+    # Debian python版本比 pikvm官方的低一些
+    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR}
+  fi
+}
+
+fix-kvmd-for-tvbox-armbian(){
+  # 打补丁来移除一些对armbian和电视盒子不太支持的特性
+  cd /
+  git apply ${APP_PATH}/patches/bullseye/*.patch
+  cd ${APP_PATH}
+}
 
 fix-webterm() {
   echo
@@ -419,7 +443,6 @@ fix-motd() {
 # 安装armbian的包
 armbian-packages() {
   mkdir -p /opt/vc/bin/
-  old=$(pwd)
   cd /opt/vc/bin
   # Install vcgencmd for armbian platform
   cp -rf $old/armbian/opt/* ./
@@ -454,6 +477,8 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
 else
   printf "\nRunning part 2 of PiKVM installer script for Raspbian by @srepac\n"
   fix-nginx-symlinks
+  fix-python-symlinks
+  fix-kvmd-for-tvbox-armbian
   fix-webterm
   fix-motd
   set-ownership 

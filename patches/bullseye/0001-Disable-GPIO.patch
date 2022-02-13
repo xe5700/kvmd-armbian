@@ -1,0 +1,41 @@
+From bf4331e9ec2ef768a4f8683a6d6e26887f43bf37 Mon Sep 17 00:00:00 2001
+From: xe5700 <9338143+xe5700@users.noreply.github.com>
+Date: Mon, 14 Feb 2022 01:22:12 +0800
+Subject: [PATCH] feat: Disable GPIO, it is useless for tvbox, and armbian
+ should use root account run make it work.
+
+---
+ .../python3/dist-packages/kvmd/apps/kvmd/ugpio.py  | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/ugpio.py b/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/ugpio.py
+index 560503d..3959c76 100644
+--- a/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/ugpio.py
++++ b/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/ugpio.py
+@@ -282,15 +282,17 @@ class UserGpio:
+ 
+     def sysprep(self) -> None:
+         get_logger().info("Preparing User-GPIO drivers ...")
+-        for (_, driver) in tools.sorted_kvs(self.__drivers):
+-            driver.prepare()
++        #for (_, driver) in tools.sorted_kvs(self.__drivers):
++        #    driver.prepare()
+ 
+     async def systask(self) -> None:
+         get_logger(0).info("Running User-GPIO drivers ...")
+-        await asyncio.gather(*[
+-            driver.run()
+-            for (_, driver) in tools.sorted_kvs(self.__drivers)
+-        ])
++       
++        #await asyncio.gather(*[
++        #    driver.run()
++        #    for (_, driver) in tools.sorted_kvs(self.__drivers)
++        #])
++        await asyncio.Event().wait()
+ 
+     async def cleanup(self) -> None:
+         for driver in self.__drivers.values():
+-- 
+2.34.1.windows.1
+

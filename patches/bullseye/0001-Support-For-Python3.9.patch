@@ -1,0 +1,25 @@
+From d55226c27b81e7d95419214a60c51a7c89815664 Mon Sep 17 00:00:00 2001
+From: xe5700 <9338143+xe5700@users.noreply.github.com>
+Date: Mon, 14 Feb 2022 01:20:15 +0800
+Subject: [PATCH] fix: Support Python3.9
+
+---
+ usr/lib/python3.10/dist-packages/kvmd/apps/kvmd/http.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/http.py b/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/http.py
+index f2d73ad..ebdfe26 100644
+--- a/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/http.py
++++ b/usr/lib/python3.10/site-packages/kvmd/apps/kvmd/http.py
+@@ -241,7 +241,7 @@ class HttpServer:
+             shutdown_timeout=1,
+             access_log_format=access_log_format,
+             print=self.__run_app_print,
+-            loop=asyncio.get_event_loop(),
++            #loop=asyncio.get_event_loop(),
+             **socket_kwargs,
+         )
+ 
+-- 
+2.34.1.windows.1
+
