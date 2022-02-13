@@ -241,7 +241,7 @@ build-ustreamer() {
 
   # Download ustreamer source and build it
   cd /tmp
-  git clone --depth https://github.com/pikvm/ustreamer=1
+  git clone --depth=1 https://github.com/pikvm/ustreamer
   cd ustreamer/
   if [[ $( uname -m ) == "aarch64" ]]; then
     make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
@@ -493,9 +493,11 @@ else
   printf "\nPoint a browser to https://$(hostname)\nIf it doesn't work, then reboot one last time.\nPlease make sure kvmd services are running after reboot.\n"
 fi
 
-# Fix paste-as-keys
-sed -i -e 's/reversed//g' /usr/lib/python3/site-packages/kvmd/keyboard/printer.py
-systemctl restart kvmd-nginx kvmd
+# Fix paste-as-keys if running python 3.7
+if [[ $( python -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
+  sed -i -e 's/reversed//g' /usr/lib/python3.9/site-packages/kvmd/keyboard/printer.py
+  systemctl restart kvmd-nginx kvmd
+fi
 
 # Download scriptmenu for Raspbian PiKVM
 #cd /usr/local/bin/; wget https://kvmnerds.com/RPiKVM/scriptmenu > /dev/null 2>&1
