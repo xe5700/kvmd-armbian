@@ -443,12 +443,12 @@ fix-motd() {
 # 安装armbian的包
 armbian-packages() {
   mkdir -p /opt/vc/bin/
-  cd /opt/vc/bin
+  #cd /opt/vc/bin
   # Install vcgencmd for armbian platform
-  cp -rf $old/armbian/opt/* ./
-  cd $old
+  cp -rf armbian/opt/* /opt/vc/bin
   cp -rf armbian/udev /etc/
 
+  cd ${APP_PATH}
   # 
 }	#end armbian-packages
 
