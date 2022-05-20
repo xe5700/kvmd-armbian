@@ -1,0 +1,38 @@
+From 960b30ec20b370269ee43282f1867861e714e33f Mon Sep 17 00:00:00 2001
+From: xe5700 <9338143+xe5700@users.noreply.github.com>
+Date: Thu, 19 May 2022 23:01:20 +0800
+Subject: [PATCH] Disable-GPIO-For-TV-Box
+
+---
+ kvmd/apps/kvmd/ugpio.py | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/kvmd/apps/kvmd/ugpio.py b/kvmd/apps/kvmd/ugpio.py
+index cea60bb9..9328496a 100644
+--- a/kvmd/apps/kvmd/ugpio.py
++++ b/kvmd/apps/kvmd/ugpio.py
+@@ -282,15 +282,15 @@ class UserGpio:
+ 
+     def sysprep(self) -> None:
+         get_logger(0).info("Preparing User-GPIO drivers ...")
+-        for (_, driver) in tools.sorted_kvs(self.__drivers):
+-            driver.prepare()
++#        for (_, driver) in tools.sorted_kvs(self.__drivers):
++#            driver.prepare()
+ 
+     async def systask(self) -> None:
+         get_logger(0).info("Running User-GPIO drivers ...")
+-        await asyncio.gather(*[
+-            driver.run()
+-            for (_, driver) in tools.sorted_kvs(self.__drivers)
+-        ])
++#        await asyncio.gather(*[
++#            driver.run()
++#            for (_, driver) in tools.sorted_kvs(self.__drivers)
++#        ])
+ 
+     async def cleanup(self) -> None:
+         for driver in self.__drivers.values():
+-- 
+2.34.1.windows.1
+

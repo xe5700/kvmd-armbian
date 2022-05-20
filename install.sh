@@ -21,7 +21,7 @@ set +x
 PIKVMREPO="https://files.pikvm.org/repos/arch/rpi4"
 KVMDCACHE="/var/cache/kvmd"
 PKGINFO="${KVMDCACHE}/packages.txt"
-APP_PATH=$(pwd)
+APP_PATH=$(dirname $0)
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
   echo "usage:  $0 [-f]   where -f will force re-install new pikvm platform"
@@ -236,20 +236,20 @@ enable-kvmd-svcs() {
 build-ustreamer() {
   printf "\n\n-> Building ustreamer\n\n"
   # Install packages needed for building ustreamer source
-  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev "
-  apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev
+  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
+  apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus
 
   # Download ustreamer source and build it
   cd /tmp
   git clone --depth=1 https://github.com/pikvm/ustreamer
   cd ustreamer/
-  if [[ $( uname -m ) == "aarch64" ]]; then
-    make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
-  else
-    make WITH_OMX=1 WITH_GPIO=1 WITH_SETPROCTITLE=1	# hardware OMX support with 32-bit ONLY
-  fi
+  # if [[ $( uname -m ) == "aarch64" ]]; then
+  #   make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
+  # else
+  #   make WITH_OMX=1 WITH_GPIO=1 WITH_SETPROCTITLE=1	# hardware OMX support with 32-bit ONLY
+  # fi
+  make WITH_GPIO=0 WITH_SYSTEMD=1 WITH_JANUS=1 -j
   make install
-
   # kvmd service is looking for /usr/bin/ustreamer   
   ln -s /usr/local/bin/ustreamer /usr/bin/
 } # end build-ustreamer 
@@ -260,7 +260,7 @@ install-dependencies() {
 
   apt-get update > /dev/null
   for i in $( echo "nginx python3 net-tools bc expect v4l-utils iptables vim dos2unix 
-screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git" )
+screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip" )
   do
     echo "apt-get install -y $i"
     apt-get install -y $i > /dev/null
@@ -268,6 +268,9 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git" )
 
   install-python-packages
 
+  echo "-> Install python package dbus_next"
+  pip3 install dbus_next
+a
   if [ ! -e /usr/bin/ttyd ]; then
     # Build and install ttyd
     # cd /tmp
@@ -321,7 +324,7 @@ fix-nginx-symlinks() {
   if [ ! -e /usr/bin/nginx ]; then ln -s /usr/sbin/nginx /usr/bin/; fi
   if [ ! -e /usr/sbin/python ]; then ln -s /usr/bin/python3 /usr/sbin/python; fi
   if [ ! -e /usr/bin/iptables ]; then ln -s /usr/sbin/iptables /usr/bin/iptables; fi
-  if [ ! -e /opt/vc/bin/vcgencmd ]; then mkdir -p /opt/vc/bin/; ln -s /usr/bin/vcgencmd /opt/vc/bin/vcgencmd; fi
+  # if [ ! -e /opt/vc/bin/vcgencmd ]; then mkdir -p /opt/vc/bin/; ln -s /usr/bin/vcgencmd /opt/vc/bin/vcgencmd; fi
 
   python-pkg-dir
 
@@ -340,11 +343,40 @@ fix-python-symlinks(){
   fi
 }
 
+apply-custom-patch(){
+  read -p "Do you want apply old kernel msd patch? [y/n]" answer
+  case $answer in
+    n|N|no|No)
+      echo 'You skiped this patch.'
+      ;;
+    y|Y|Yes|yes)
+      ./custom/old-kernel-msd/apply.sh
+      break;
+      ;;
+    *)
+      echo "Try again.";;
+  esac
+}
+
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
-  cd /
+  cd /usr/lib/python3.10/site-packages/kvmd/
   git apply ${APP_PATH}/patches/bullseye/*.patch
   cd ${APP_PATH}
+  while true; do
+    read -p "Do you want to apply custom patches?  [y/n] " answer
+    case $answer in
+      n|N|no|No)
+        break;
+        ;;
+      y|Y|Yes|yes)
+        apply-custom-patch();
+        break;
+        ;;
+      *)
+        echo "Try again.";;
+    esac
+  done
 }
 
 fix-webterm() {
@@ -446,7 +478,7 @@ armbian-packages() {
   #cd /opt/vc/bin
   # Install vcgencmd for armbian platform
   cp -rf armbian/opt/* /opt/vc/bin
-  cp -rf armbian/udev /etc/
+  #cp -rf armbian/udev /etc/
 
   cd ${APP_PATH}
   # 
