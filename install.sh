@@ -360,23 +360,21 @@ apply-custom-patch(){
 
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
-  cd /usr/lib/python3.10/site-packages/kvmd/
+  cd /usr/lib/python3.10/site-packages/
   git apply ${APP_PATH}/patches/bullseye/*.patch
   cd ${APP_PATH}
-  while true; do
-    read -p "Do you want to apply custom patches?  [y/n] " answer
-    case $answer in
-      n|N|no|No)
-        break;
-        ;;
-      y|Y|Yes|yes)
-        apply-custom-patch();
-        break;
-        ;;
-      *)
-        echo "Try again.";;
-    esac
-  done
+  read -p "Do you want to apply custom patches?  [y/n] " answer
+  case $answer in
+    n|N|no|No)
+     return;
+     ;;
+    y|Y|Yes|yes)
+     apply-custom-patch;
+     return;
+     ;;
+    *)
+     echo "Try again.";;
+  esac
 }
 
 fix-webterm() {
