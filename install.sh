@@ -260,7 +260,7 @@ install-dependencies() {
 
   apt-get update > /dev/null
   for i in $( echo "nginx python3 net-tools bc expect v4l-utils iptables vim dos2unix 
-screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip" )
+screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tesseract-ocr" )
   do
     echo "apt-get install -y $i"
     apt-get install -y $i > /dev/null
@@ -270,7 +270,10 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip" )
 
   echo "-> Install python package dbus_next"
   pip3 install dbus_next
-a
+
+  echo "-> Make tesseract data link"
+  ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
+
   if [ ! -e /usr/bin/ttyd ]; then
     # Build and install ttyd
     # cd /tmp
@@ -499,6 +502,7 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   install-dependencies
   otg-devices
   enable-kvmd-svcs
+  systemctl disable --now janus
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
 
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
