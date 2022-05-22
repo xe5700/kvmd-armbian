@@ -21,7 +21,7 @@ set +x
 PIKVMREPO="https://files.pikvm.org/repos/arch/rpi4"
 KVMDCACHE="/var/cache/kvmd"
 PKGINFO="${KVMDCACHE}/packages.txt"
-APP_PATH=$(dirname $0)
+APP_PATH=$(readlink -f $(dirname $0))
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
   echo "usage:  $0 [-f]   where -f will force re-install new pikvm platform"
@@ -260,7 +260,7 @@ install-dependencies() {
 
   apt-get update > /dev/null
   for i in $( echo "nginx python3 net-tools bc expect v4l-utils iptables vim dos2unix 
-screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tesseract-ocr" )
+screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tesseract-ocr tesseract-ocr-chi-sim" )
   do
     echo "apt-get install -y $i"
     apt-get install -y $i > /dev/null
@@ -273,7 +273,7 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
 
   echo "-> Make tesseract data link"
   ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
-
+  apt install ttyd
   if [ ! -e /usr/bin/ttyd ]; then
     # Build and install ttyd
     # cd /tmp
@@ -294,7 +294,7 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
 
   if [ ! -e /usr/bin/ustreamer ]; then
     cd /tmp
-	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7
+	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
     ### required dependent packages for ustreamer ###
     build-ustreamer
     cd ${APP_PATH}
@@ -353,8 +353,7 @@ apply-custom-patch(){
       echo 'You skiped this patch.'
       ;;
     y|Y|Yes|yes)
-      ./custom/old-kernel-msd/apply.sh
-      break;
+      ./patches/custom/old-kernel-msd/apply.sh
       ;;
     *)
       echo "Try again.";;
@@ -501,10 +500,15 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   fix-udevrules
   install-dependencies
   otg-devices
-  enable-kvmd-svcs
   systemctl disable --now janus
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
 
+  fix-kvmd-for-tvbox-armbian
+  
+  # Fix paste-as-keys if running python 3.7
+  if [[ $( python -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
+    sed -i -e 's/reversed//g' /usr/lib/python3.10/site-packages/kvmd/keyboard/printer.py
+  fi
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
   press-enter
   reboot
@@ -512,12 +516,12 @@ else
   printf "\nRunning part 2 of PiKVM installer script for Raspbian by @srepac\n"
   fix-nginx-symlinks
   fix-python-symlinks
-  fix-kvmd-for-tvbox-armbian
   fix-webterm
   fix-motd
   set-ownership 
   create-kvmdfix
   check-kvmd-works
+  enable-kvmd-svcs
   start-kvmd-svcs
 
   printf "\nCheck kvmd devices\n\n" 
@@ -527,11 +531,6 @@ else
   printf "\nPoint a browser to https://$(hostname)\nIf it doesn't work, then reboot one last time.\nPlease make sure kvmd services are running after reboot.\n"
 fi
 
-# Fix paste-as-keys if running python 3.7
-if [[ $( python -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
-  sed -i -e 's/reversed//g' /usr/lib/python3.9/site-packages/kvmd/keyboard/printer.py
-  systemctl restart kvmd-nginx kvmd
-fi
 
 # Download scriptmenu for Raspbian PiKVM
 #cd /usr/local/bin/; wget https://kvmnerds.com/RPiKVM/scriptmenu > /dev/null 2>&1
