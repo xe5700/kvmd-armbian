@@ -9,7 +9,7 @@ Subject: [PATCH 1/1] Support for old version python 3
 
 diff --git a/kvmd/htserver.py b/kvmd/htserver.py
 index c24837d..4a3c306 100644
---- a/kvmd/htserver.py
+--- a/kvmd/htserver.pyz
 +++ b/kvmd/htserver.py
 @@ -297,7 +297,7 @@ class HttpServer:
              shutdown_timeout=1,
