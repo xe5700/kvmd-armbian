@@ -1,5 +1,5 @@
 # KVMD-ARMBIAN
-This project support non Raspberry Pi device running pikvm on armbian
+This project support non Raspberry Pi device to running pikvm on armbian
 # Install
 KVMD Install for armbian
 It support Allwinner, Amlogic and Rockchip based tv box, tested on phicomm n1, mxq pro 4k, tqc a01. 
