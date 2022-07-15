@@ -32,3 +32,9 @@ cd kvmd-armbian
 ## Step 4
 - running install.sh or install-mirror.sh after reboot os then running again.
 - Enjoy
+
+# Tested device
+ - Phicomm N1
+ - TQC A01 (Ethernet port not working, only support wireless.)
+ - RK322x based tvbox (MXQ, V88)
+ - S905L2 based tvbox
