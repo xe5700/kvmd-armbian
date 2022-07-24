@@ -136,6 +136,9 @@ boot-files() {
     fi 
   fi  # end of check if entries are already in /boot/config.txt
 
+  # Remove OTG serial
+  sed -i '/^g_serial/d' /etc/modules 
+
   # /etc/modules required entries for DWC2, HID and I2C
   if [[ $( grep -w dwc2 /etc/modules | wc -l ) -eq 0 ]]; then
     echo "dwc2" >> /etc/modules
@@ -489,6 +492,7 @@ armbian-packages() {
 # First part requires a reboot in order to create kvmd users and groups
 # Second part will start the necessary kvmd services
 # added option to re-install by adding -f parameter (for use as platform switcher)
+PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
 if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   printf "\nRunning part 1 of PiKVM installer script for Raspbian by @srepac\n"
   get-packages
@@ -500,13 +504,14 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   fix-udevrules
   install-dependencies
   otg-devices
+  armbian-packages
   systemctl disable --now janus
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
 
   fix-kvmd-for-tvbox-armbian
   
   # Fix paste-as-keys if running python 3.7
-  if [[ $( python -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
+  if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
     sed -i -e 's/reversed//g' /usr/lib/python3.10/site-packages/kvmd/keyboard/printer.py
   fi
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
