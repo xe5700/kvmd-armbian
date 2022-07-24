@@ -136,7 +136,7 @@ boot-files() {
     fi 
   fi  # end of check if entries are already in /boot/config.txt
 
-  # Remove OTG serial
+  # Remove OTG serial (Orange pi zero's kernel not support it)
   sed -i '/^g_serial/d' /etc/modules 
 
   # /etc/modules required entries for DWC2, HID and I2C
