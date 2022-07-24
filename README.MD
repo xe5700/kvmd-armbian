@@ -39,3 +39,4 @@ cd kvmd-armbian
  - TQC A01 (Ethernet port not working, only support wireless.)
  - RK322x based tvbox (MXQ, V88)
  - S905L2 based tvbox
+ - Orange pi zero
