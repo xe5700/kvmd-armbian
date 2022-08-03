@@ -1,7 +1,7 @@
 #!/bin/bash
 # modified by xe5700 		2021-11-04	xe5700@outlook.com
 # modified by NewbieOrange	2021-11-04
-# created by @srepac   08/09/2011   srepac@kvmnerds.com
+# created by @srepac   08/09/2021   srepac@kvmnerds.com
 # Scripted Installer of Pi-KVM on Raspbian (32-bit) meant for RPi4
 #
 # *** MSD is disabled by default ***
