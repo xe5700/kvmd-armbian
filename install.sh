@@ -276,7 +276,9 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
 
   echo "-> Make tesseract data link"
   ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
-  apt install ttyd
+
+  echo "-> Install TTYD"
+  apt install -y ttyd
   if [ ! -e /usr/bin/ttyd ]; then
     # Build and install ttyd
     # cd /tmp
@@ -295,6 +297,7 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
     chmod +x /usr/bin/ttyd
   fi
 
+  echo "-> Install ustreamer"
   if [ ! -e /usr/bin/ustreamer ]; then
     cd /tmp
 	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
