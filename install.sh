@@ -475,7 +475,7 @@ fix-motd() {
   # systemctl restart kvmd-webterm
 } # end fix-motd
 
-# 安装armbian的包
+# Install package for armbian
 armbian-packages() {
   mkdir -p /opt/vc/bin/
   #cd /opt/vc/bin
@@ -492,49 +492,49 @@ armbian-packages() {
 # First part requires a reboot in order to create kvmd users and groups
 # Second part will start the necessary kvmd services
 # added option to re-install by adding -f parameter (for use as platform switcher)
-PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
-if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
-  printf "\nRunning part 1 of PiKVM installer script for Raspbian by @srepac\n"
-  get-packages
-  get-platform
-  boot-files
-  install-kvmd-pkgs
-  create-override
-  gen-ssl-certs
-  fix-udevrules
-  install-dependencies
-  otg-devices
-  armbian-packages
-  systemctl disable --now janus
-  printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
+# PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
+# if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
+#   printf "\nRunning part 1 of PiKVM installer script for Raspbian by @srepac\n"
+#   get-packages
+#   get-platform
+#   boot-files
+#   install-kvmd-pkgs
+#   create-override
+#   gen-ssl-certs
+#   fix-udevrules
+#   install-dependencies
+#   otg-devices
+#   armbian-packages
+#   systemctl disable --now janus
+#   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
 
-  fix-kvmd-for-tvbox-armbian
+#   fix-kvmd-for-tvbox-armbian
   
-  # Fix paste-as-keys if running python 3.7
-  if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
-    sed -i -e 's/reversed//g' /usr/lib/python3.10/site-packages/kvmd/keyboard/printer.py
-  fi
-  # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
-  press-enter
-  reboot
-else
-  printf "\nRunning part 2 of PiKVM installer script for Raspbian by @srepac\n"
-  fix-nginx-symlinks
-  fix-python-symlinks
-  fix-webterm
-  fix-motd
-  set-ownership 
-  create-kvmdfix
-  check-kvmd-works
-  enable-kvmd-svcs
-  start-kvmd-svcs
+#   # Fix paste-as-keys if running python 3.7
+#   if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
+#     sed -i -e 's/reversed//g' /usr/lib/python3.10/site-packages/kvmd/keyboard/printer.py
+#   fi
+#   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
+#   press-enter
+#   reboot
+# else
+#   printf "\nRunning part 2 of PiKVM installer script for Raspbian by @srepac\n"
+#   fix-nginx-symlinks
+#   fix-python-symlinks
+#   fix-webterm
+#   fix-motd
+#   set-ownership 
+#   create-kvmdfix
+#   check-kvmd-works
+#   enable-kvmd-svcs
+#   start-kvmd-svcs
 
-  printf "\nCheck kvmd devices\n\n" 
-  ls -l /dev/kvmd*
-  printf "\nYou should see devices for keyboard, mouse, and video.\n"
+#   printf "\nCheck kvmd devices\n\n" 
+#   ls -l /dev/kvmd*
+#   printf "\nYou should see devices for keyboard, mouse, and video.\n"
 
-  printf "\nPoint a browser to https://$(hostname)\nIf it doesn't work, then reboot one last time.\nPlease make sure kvmd services are running after reboot.\n"
-fi
+#   printf "\nPoint a browser to https://$(hostname)\nIf it doesn't work, then reboot one last time.\nPlease make sure kvmd services are running after reboot.\n"
+# fi
 
 
 # Download scriptmenu for Raspbian PiKVM
