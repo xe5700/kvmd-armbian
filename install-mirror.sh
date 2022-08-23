@@ -15,6 +15,9 @@ clone_mirror(){
 	1. hub.fastgit.org [China Hong Kong] \n
 	2. gitclone.com [China Zhe Jiang] \n
 	3. github.com.cnpmjs.org [Singapore]\n
+	4. kgithub.com \n
+	5. hub.njuu.cf \n
+	6. hub.yzuu.cf \n
 	"
 	tryagain=1
 	while [ $tryagain -eq 1 ]; do
@@ -24,6 +27,9 @@ clone_mirror(){
 		1) url_clone="https:\\/\\/hub.fastgit.org\\/"; tryagain=0;;
 		2) url_clone="https:\\/\\/gitclone.com\\/github.com\\/"; tryagain=0;;
 		3) url_clone="https:\\/\\/github.com.cnpmjs.org\\/"; tryagain=0;;
+		4) url_clone="https:\\/\\/kgithub.com\\/"; tryagin=0;;
+		5) url_clone="https:\\/\\/hub.njuu.cf\\/"; tryagin=0;;
+		6) url_clone="https:\\/\\/hub.yzuu.cf\\/"; tryagin=0;;
 		*) printf "\nTry again.\n"; tryagain=1;;
 		esac
 		echo
