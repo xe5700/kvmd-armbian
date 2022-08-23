@@ -512,7 +512,6 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   armbian-packages
   systemctl disable --now janus
   fix-kvmd-for-tvbox-armbian
-  enable-kvmd-svcs
   
   # Fix paste-as-keys if running python 3.7
   if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
@@ -532,6 +531,7 @@ else
   set-ownership 
   create-kvmdfix
   check-kvmd-works
+  enable-kvmd-svcs
   start-kvmd-svcs
 
   printf "\nCheck kvmd devices\n\n" 
