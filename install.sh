@@ -420,10 +420,12 @@ ENDSERVICE
 #
 set -x
 chgrp gpio /dev/gpio*
+chmod 660 /dev/gpio*   ### this is required in case gpio (wiringpi) is installed
 ls -l /dev/gpio*
 
 ls -l /dev/kvmd-video
 rm /dev/kvmd-video
+# Need to use video0 for orange pi (if you don't, the video capture won't work)
 ln -s video1 /dev/kvmd-video
 SCRIPTEND
 
@@ -509,14 +511,14 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   otg-devices
   armbian-packages
   systemctl disable --now janus
-  printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
-
   fix-kvmd-for-tvbox-armbian
   
   # Fix paste-as-keys if running python 3.7
   if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
     sed -i -e 's/reversed//g' /usr/lib/python3.10/site-packages/kvmd/keyboard/printer.py
   fi
+
+  printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
   press-enter
   reboot
@@ -538,9 +540,3 @@ else
 
   printf "\nPoint a browser to https://$(hostname)\nIf it doesn't work, then reboot one last time.\nPlease make sure kvmd services are running after reboot.\n"
 fi
-
-
-# Download scriptmenu for Raspbian PiKVM
-#cd /usr/local/bin/; wget https://kvmnerds.com/RPiKVM/scriptmenu > /dev/null 2>&1
-#chmod +x scriptmenu
-#printf "\n\nRun 'scriptmenu' as root anytime for other configurations related to Raspbian PiKVM.\n\n"
