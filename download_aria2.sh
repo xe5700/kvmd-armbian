@@ -15,7 +15,7 @@ download() {
             if [ sum != 0 ]; then
                 echo "File checksum failed, try redownload file."
                 rm $2
-                return download $1 $2 $3 $4
+                return $(download $1 $2 $3 $4)
             fi
         fi
     fi
