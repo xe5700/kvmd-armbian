@@ -18,6 +18,7 @@
 # Last change 20210818 1830 PDT
 # VER=1.0
 source config.sh
+source $DOWNLOAD_FUNC
 set +x
 APP_PATH=$(readlink -f $(dirname $0))
 
@@ -108,7 +109,7 @@ otg-devices() {
 
 install-tc358743() {
   ### CSI Support for Raspbian ###
-  curl https://www.linux-projects.org/listing/uv4l_repo/lpkey.asc | apt-key add -
+  wget -O- -q https://www.linux-projects.org/listing/uv4l_repo/lpkey.asc | apt-key add -
   echo "deb https://www.linux-projects.org/listing/uv4l_repo/raspbian/stretch stretch main" | tee /etc/apt/sources.list.d/uv4l.list
 
   apt-get update > /dev/null
@@ -157,16 +158,15 @@ boot-files() {
 get-packages() { 
   printf "\n\n-> Getting Pi-KVM packages from ${PIKVMREPO}\n\n"
   mkdir -p ${KVMDCACHE}
-  echo "wget ${PIKVMREPO} -O ${PKGINFO}"
-  $WGET_EXE ${PIKVMREPO} -O ${PKGINFO} 2> /dev/null
+  #echo "wget ${PIKVMREPO} -O ${PKGINFO}"
+  download ${PIKVMREPO} ${PKGINFO}
   echo
 
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
   for pkg in `egrep 'janus|kvmd' ${PKGINFO} | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
   do
     rm -f ${KVMDCACHE}/$pkg*
-    echo "wget ${PIKVMREPO}/$pkg -O ${KVMDCACHE}/$pkg"
-    $WGET_EXE ${PIKVMREPO}/$pkg -O ${KVMDCACHE}/$pkg 2> /dev/null
+    download ${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg
   done
 
   echo
@@ -287,14 +287,14 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
     # make -j && make install
     # Install binary from GitHub
     arch=$(dpkg --print-architecture)
-    latest=$(curl -sL $MIRROR_GITHUB_API/repos/tsl0922/ttyd/releases/latest | jq -r ".tag_name")
+    latest=$(wget -q -O- $MIRROR_GITHUB_API/repos/tsl0922/ttyd/releases/latest | jq -r ".tag_name")
     if [ $arch = arm64 ]; then
       arch='aarch64'
     fi
     if [ $arch = amd64 ]; then
       arch='x86_64'
     fi
-    $WGET_EXE "$MIRROR_GITHUB/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
+    wget "$MIRROR_GITHUB/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
     chmod +x /usr/bin/ttyd
   fi
 
