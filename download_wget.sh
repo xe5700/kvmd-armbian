@@ -1,6 +1,6 @@
 #!/bin/bash
-download($url, $path){
-    echo Downloading $url To $path
-    echo "wget $url -O $path"
-    wget $url -O $path
+download() {
+    echo Downloading $1 To $2
+    echo "wget $1 -O $2"
+    wget $1 -O $2
 }
