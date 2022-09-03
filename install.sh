@@ -160,13 +160,15 @@ get-packages() {
   mkdir -p ${KVMDCACHE}
   #echo "wget ${PIKVMREPO} -O ${PKGINFO}"
   download ${PIKVMREPO} ${PKGINFO}
-  echo
-
+  echo "import Pi-Kvm Repo Key"
+  gpg --keyserver keyserver.ubuntu.com --recv-keys $PIKVM_KEY
+  gpg -a --export $PIKVM_KEY | apt-key add -
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
   for pkg in `egrep 'janus|kvmd' ${PKGINFO} | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
   do
-    rm -f ${KVMDCACHE}/$pkg*
-    download ${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg
+    rm -f ${KVMDCACHE}/$pkg.sig 
+    download ${PIKVMREPO}/$pkg.sig ${KVMDCACHE}/$pkg.sig 
+    download ${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg gpg ${KVMDCACHE}/$pkg.sig
   done
 
   echo
