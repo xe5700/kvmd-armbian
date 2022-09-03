@@ -369,7 +369,12 @@ apply-custom-patch(){
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   cd /usr/lib/python3.10/site-packages/
-  git apply ${APP_PATH}/patches/bullseye/*.patch
+  if [[ $DEBIAN_PYTHON = 1 ]]; then
+    git apply ${APP_PATH}/patches/debian_python/*.patch
+  fi
+  if [[ $USE_GPIO = 0 ]]; then
+    git apply ${APP_PATH}/patches/disable_gpio/*.patch
+  fi
   cd ${APP_PATH}
   read -p "Do you want to apply custom patches?  [y/n] " answer
   case $answer in
