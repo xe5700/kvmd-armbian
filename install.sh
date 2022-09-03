@@ -17,8 +17,8 @@
 #
 # Last change 20210818 1830 PDT
 # VER=1.0
+source config.sh
 set +x
-PIKVMREPO="https://files.pikvm.org/repos/arch/rpi4"
 KVMDCACHE="/var/cache/kvmd"
 PKGINFO="${KVMDCACHE}/packages.txt"
 APP_PATH=$(readlink -f $(dirname $0))
@@ -244,7 +244,7 @@ build-ustreamer() {
 
   # Download ustreamer source and build it
   cd /tmp
-  git clone --depth=1 https://github.com/pikvm/ustreamer
+  $GIT_EXE clone --depth=1 $MIRROR_GITHUB/pikvm/ustreamer
   cd ustreamer/
   # if [[ $( uname -m ) == "aarch64" ]]; then
   #   make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
@@ -289,11 +289,14 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
     # make -j && make install
     # Install binary from GitHub
     arch=$(dpkg --print-architecture)
-    latest=$(curl -sL https://api.github.com/repos/tsl0922/ttyd/releases/latest | jq -r ".tag_name")
+    latest=$(curl -sL $MIRROR_GITHUB_API/repos/tsl0922/ttyd/releases/latest | jq -r ".tag_name")
     if [ $arch = arm64 ]; then
       arch='aarch64'
-    fi 
-    wget "https://github.com/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
+    fi
+    if [ $arch = amd64 ]; then
+      arch='x86_64'
+    fi
+    wget "$MIRROR_GITHUB/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
     chmod +x /usr/bin/ttyd
   fi
 
