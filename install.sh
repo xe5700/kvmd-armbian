@@ -19,8 +19,6 @@
 # VER=1.0
 source config.sh
 set +x
-KVMDCACHE="/var/cache/kvmd"
-PKGINFO="${KVMDCACHE}/packages.txt"
 APP_PATH=$(readlink -f $(dirname $0))
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
@@ -160,7 +158,7 @@ get-packages() {
   printf "\n\n-> Getting Pi-KVM packages from ${PIKVMREPO}\n\n"
   mkdir -p ${KVMDCACHE}
   echo "wget ${PIKVMREPO} -O ${PKGINFO}"
-  wget ${PIKVMREPO} -O ${PKGINFO} 2> /dev/null
+  $WGET_EXE ${PIKVMREPO} -O ${PKGINFO} 2> /dev/null
   echo
 
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
@@ -168,7 +166,7 @@ get-packages() {
   do
     rm -f ${KVMDCACHE}/$pkg*
     echo "wget ${PIKVMREPO}/$pkg -O ${KVMDCACHE}/$pkg"
-    wget ${PIKVMREPO}/$pkg -O ${KVMDCACHE}/$pkg 2> /dev/null
+    $WGET_EXE ${PIKVMREPO}/$pkg -O ${KVMDCACHE}/$pkg 2> /dev/null
   done
 
   echo
@@ -296,7 +294,7 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
     if [ $arch = amd64 ]; then
       arch='x86_64'
     fi
-    wget "$MIRROR_GITHUB/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
+    $WGET_EXE "$MIRROR_GITHUB/tsl0922/ttyd/releases/download/$latest/ttyd.$arch" -O /usr/bin/ttyd
     chmod +x /usr/bin/ttyd
   fi
 
@@ -373,10 +371,10 @@ fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   cd /usr/lib/python3.10/site-packages/
   if [[ $DEBIAN_PYTHON = 1 ]]; then
-    git apply ${APP_PATH}/patches/debian_python/*.patch
+    $GIT_EXE apply ${APP_PATH}/patches/debian_python/*.patch
   fi
   if [[ $USE_GPIO = 0 ]]; then
-    git apply ${APP_PATH}/patches/disable_gpio/*.patch
+    $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/*.patch
   fi
   cd ${APP_PATH}
   read -p "Do you want to apply custom patches?  [y/n] " answer
