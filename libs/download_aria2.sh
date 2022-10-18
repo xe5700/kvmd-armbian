@@ -1,5 +1,5 @@
 #!/bin/bash
-source checksum.sh
+source libs/checksum.sh
 download(){
     tryCount=0
     echo Downloading $1 To $2
