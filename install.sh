@@ -225,7 +225,7 @@ install-kvmd-pkgs() {
     rm ${KVMDCACHE}/kvmd.tar.gz
     download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz ${KVMDCACHE}/kvmd.tar.gz
     mkdir -p /tmp/kvmd-tmp
-    /tmp/kvmd-tmp/setup.py install
+    /tmp/kvmd-tmp/kvmd-$KVMD_VERSION/setup.py install
     rm -rf /tmp/kvmd-tmp
   fi
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
