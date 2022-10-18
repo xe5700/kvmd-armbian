@@ -90,7 +90,7 @@ install-python-packages() {
   for i in $( echo "aiofiles aiohttp appdirs asn1crypto async-timeout bottle cffi chardet click 
 colorama cryptography dateutil dbus hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
 packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
-setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl zstandard" )
+setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl zstd" )
   do
     echo "apt-get install python3-$i -y"
     apt-get install python3-$i -y > /dev/null
@@ -178,23 +178,25 @@ get-packages() {
 } # end get-packages function
 
 get-platform() {
-  tryagain=1
-  while [ $tryagain -eq 1 ]; do
-    # amglogic tv box only has usb port, use usb dongle.
-	# printf "Choose which capture device you will use:\n\n  1 - USB dongle\n  2 - v2 CSI\n  3 - V3 HAT\n" 
-    # read -p "Please type [1-3]: " capture
-	capture=1;
-    case $capture in 
-      1) platform="kvmd-platform-v2-hdmiusb-rpi4"; tryagain=0;;
-      2) platform="kvmd-platform-v2-hdmi-rpi4"; tryagain=0;;
-      3) platform="kvmd-platform-v3-hdmi-rpi4"; tryagain=0;;
+  # tryagain=1
+  # while [ $tryagain -eq 1 ]; do
+  #   # amglogic tv box only has usb port, use usb dongle.
+	# # printf "Choose which capture device you will use:\n\n  1 - USB dongle\n  2 - v2 CSI\n  3 - V3 HAT\n" 
+  #   # read -p "Please type [1-3]: " capture
+	# capture=1;
+
+  # done
+    case $USE_CSI in 
+      0) platform="kvmd-platform-v2-hdmiusb-rpi4"; tryagain=0;;
+      # 2) platform="kvmd-platform-v2-hdmi-rpi4"; tryagain=0;;
+      1) platform="kvmd-platform-v3-hdmi-rpi4"; tryagain=0;;
       *) printf "\nTry again.\n"; tryagain=1;;
     esac
     echo
     echo "Platform selected -> $platform"
     echo
-  done
 } # end get-platform
+
 
 install-kvmd-pkgs() {
   cd /
@@ -208,7 +210,26 @@ install-kvmd-pkgs() {
   tar xfJ $i 
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'kvmd-[0-9]|janus|webterm' )
+  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'kvmd-[0-9]' )
+  do
+    echo "-> Extracting package $i into /" >> $INSTLOG
+    if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
+      tar xfJ $i --exclude=/usr/lib/python3.10
+    else
+      tar xfJ $i
+    fi
+  done
+  if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
+  # Use custom kvmd version replace kvmd offical package
+    apt install python3-setuptools
+    rm ${KVMDCACHE}/kvmd.tar.gz
+    download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz ${KVMDCACHE}/kvmd.tar.gz
+    mkdir -p /tmp/kvmd-tmp
+    /tmp/kvmd-tmp/setup.py install
+    rm -rf /tmp/kvmd-tmp
+  else
+# then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
+  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'janus|webterm' )
   do
     echo "-> Extracting package $i into /" >> $INSTLOG 
     tar xfJ $i
@@ -229,7 +250,7 @@ enable-kvmd-svcs() {
   systemctl enable kvmd-nginx kvmd-webterm kvmd-otg kvmd 
 
   # in case going from CSI to USB, then disable kvmd-tc358743 service (in case it's enabled)
-  if [[ $( echo $platform | grep usb | wc -l ) -eq 1 ]]; then
+  if [[ $USE_CSI -eq 0 ]]; then
     systemctl disable --now kvmd-tc358743 
   else
     systemctl enable kvmd-tc358743 
@@ -240,18 +261,23 @@ build-ustreamer() {
   printf "\n\n-> Building ustreamer\n\n"
   # Install packages needed for building ustreamer source
   echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
-  apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus
-
+  apt install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
+  if [[ $USE_GPIO -eq 1]]; then
+    apt install -y libgpiod-dev
+  fi
+  if [[ $USE_JANUS -eq 1 ]]; then
+    apt install -y janus-dev janus
+  fi
   # Download ustreamer source and build it
   cd /tmp
-  $GIT_EXE clone --depth=1 $MIRROR_GITHUB/pikvm/ustreamer
+  $GIT_EXE clone $GIT_CLONE_WITH_DEPTH $MIRROR_GITHUB/pikvm/ustreamer
   cd ustreamer/
   # if [[ $( uname -m ) == "aarch64" ]]; then
   #   make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
   # else
   #   make WITH_OMX=1 WITH_GPIO=1 WITH_SETPROCTITLE=1	# hardware OMX support with 32-bit ONLY
   # fi
-  make WITH_GPIO=0 WITH_SYSTEMD=1 WITH_JANUS=1 -j
+  make WITH_GPIO=$USE_GPIO WITH_SYSTEMD=1 WITH_JANUS=$USE_JANUS -j
   make install
   # kvmd service is looking for /usr/bin/ustreamer   
   ln -s /usr/local/bin/ustreamer /usr/bin/
@@ -372,10 +398,10 @@ apply-custom-patch(){
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   cd /usr/lib/python3.10/site-packages/
-  if [[ $DEBIAN_PYTHON = 1 ]]; then
+  if [[ "$DEBIAN_PYTHON" = 1 ]]; then
     $GIT_EXE apply ${APP_PATH}/patches/debian_python/*.patch
   fi
-  if [[ $USE_GPIO = 0 ]]; then
+  if [[ "$USE_GPIO" = 0 ]]; then
     $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/*.patch
   fi
   cd ${APP_PATH}
