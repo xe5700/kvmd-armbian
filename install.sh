@@ -227,7 +227,7 @@ install-kvmd-pkgs() {
     mkdir -p /tmp/kvmd-tmp
     /tmp/kvmd-tmp/setup.py install
     rm -rf /tmp/kvmd-tmp
-  else
+  fi
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
   for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'janus|webterm' )
   do
@@ -262,7 +262,7 @@ build-ustreamer() {
   # Install packages needed for building ustreamer source
   echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
   apt install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
-  if [[ $USE_GPIO -eq 1]]; then
+  if [[ $USE_GPIO -eq 1 ]]; then
     apt install -y libgpiod-dev
   fi
   if [[ $USE_JANUS -eq 1 ]]; then
@@ -398,10 +398,10 @@ apply-custom-patch(){
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   cd /usr/lib/python3.10/site-packages/
-  if [[ "$DEBIAN_PYTHON" = 1 ]]; then
+  if [[ "$DEBIAN_PYTHON" -eq 1 ]]; then
     $GIT_EXE apply ${APP_PATH}/patches/debian_python/*.patch
   fi
-  if [[ "$USE_GPIO" = 0 ]]; then
+  if [[ "$USE_GPIO" -eq 0 ]]; then
     $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/*.patch
   fi
   cd ${APP_PATH}
