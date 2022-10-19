@@ -225,6 +225,7 @@ install-kvmd-pkgs() {
     rm ${KVMDCACHE}/kvmd.tar.gz
     download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz ${KVMDCACHE}/kvmd.tar.gz
     mkdir -p /tmp/kvmd-tmp
+    tar axf ${KVMDCACHE}/kvmd.tar.gz -C /tmp/kvmd-tmp
     /tmp/kvmd-tmp/kvmd-$KVMD_VERSION/setup.py install
     rm -rf /tmp/kvmd-tmp
   fi
@@ -289,7 +290,7 @@ install-dependencies() {
 
   apt-get update > /dev/null
   for i in $( echo "nginx python3 net-tools bc expect v4l-utils iptables vim dos2unix 
-screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tesseract-ocr tesseract-ocr-chi-sim" )
+screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
   do
     echo "apt-get install -y $i"
     apt-get install -y $i > /dev/null
