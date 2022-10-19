@@ -226,7 +226,9 @@ install-kvmd-pkgs() {
     download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz ${KVMDCACHE}/kvmd.tar.gz
     mkdir -p /tmp/kvmd-tmp
     tar axf ${KVMDCACHE}/kvmd.tar.gz -C /tmp/kvmd-tmp
-    /tmp/kvmd-tmp/kvmd-$KVMD_VERSION/setup.py install
+    cd /tmp/kvmd-tmp/kvmd-$KVMD_VERSION/
+    setup.py install
+    cd $APP_PATH
     rm -rf /tmp/kvmd-tmp
   fi
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
@@ -298,9 +300,7 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
 
   install-python-packages
 
-  echo "-> Install python package dbus_next"
-  pip3 install dbus_next
-
+  pip3 install dbus_next zstandard
   echo "-> Make tesseract data link"
   ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
 
@@ -398,7 +398,7 @@ apply-custom-patch(){
 
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
-  cd /usr/lib/python3.10/site-packages/
+  cd $PYTHONDIR
   if [[ "$DEBIAN_PYTHON" -eq 1 ]]; then
     $GIT_EXE apply ${APP_PATH}/patches/debian_python/*.patch
   fi
@@ -550,7 +550,7 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   
   # Fix paste-as-keys if running python 3.7
   if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
-    sed -i -e 's/reversed//g' /usr/lib/python3.10/site-packages/kvmd/keyboard/printer.py
+    sed -i -e 's/reversed//g' $PYTHONDIR/kvmd/keyboard/printer.py
   fi
 
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"

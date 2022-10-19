@@ -1,0 +1,41 @@
+From 840b9af2bc6f65851bd45eeb0cb4d629aed3423a Mon Sep 17 00:00:00 2001
+From: Frank Zhang <xe5700@outlook.com>
+Date: Thu, 19 May 2022 22:48:49 +0800
+Subject: [PATCH] Allow skip some features unsupports on old linux kernel
+
+---
+ kvmd/apps/otg/__init__.py | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/kvmd/apps/otg/__init__.py b/kvmd/apps/otg/__init__.py
+index d0ed0554..4aaeb3f8 100644
+--- a/kvmd/apps/otg/__init__.py
++++ b/kvmd/apps/otg/__init__.py
+@@ -78,8 +78,11 @@ def _unlink(path: str, optional: bool=False) -> None:
+     os.unlink(path)
+ 
+ 
+-def _write(path: str, value: Union[str, int]) -> None:
++def _write(path: str, value: Union[str, int], optional: bool=False) -> None:
+     get_logger().info("WRITE --- %s", path)
++    if optional and not os.access(path, os.F_OK):
++        get_logger().info("SKIP ---- %s", path)
++        return
+     with open(path, "w") as param_file:
+         param_file.write(str(value))
+ 
+@@ -158,9 +161,9 @@ class _GadgetConfig:
+         func = f"hid.usb{self.__hid_instance}"
+         func_path = join(self.__gadget_path, "functions", func)
+         _mkdir(func_path)
+-        _write(join(func_path, "no_out_endpoint"), "1")
++        _write(join(func_path, "no_out_endpoint"), "1", optional=True)
+         if remote_wakeup:
+-            _write(join(func_path, "wakeup_on_write"), "1")
++            _write(join(func_path, "wakeup_on_write"), "1", optional=True)
+         _write(join(func_path, "protocol"), hid.protocol)
+         _write(join(func_path, "subclass"), hid.subclass)
+         _write(join(func_path, "report_length"), hid.report_length)
+-- 
+2.34.1.windows.1
+
