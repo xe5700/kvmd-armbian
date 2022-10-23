@@ -87,7 +87,7 @@ CSIOVERRIDE
 } # end create-override
 
 install-python-packages() { 
-  for i in $( echo "aiofiles aiohttp appdirs asn1crypto async-timeout bottle cffi chardet click 
+  for i in $( echo "aiofiles appdirs asn1crypto async-timeout bottle cffi chardet click 
 colorama cryptography dateutil dbus hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
 packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
 setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl zstd" )
@@ -95,6 +95,8 @@ setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl
     echo "apt-get install python3-$i -y"
     apt-get install python3-$i -y > /dev/null
   done
+  # U
+  pip3 install dbus_next==0.2.3 zstandard==0.18.0 pyserial==3.5 aiohttp==3.8.3
 } # end install python-packages
 
 otg-devices() {
@@ -292,7 +294,7 @@ install-dependencies() {
 
   apt-get update > /dev/null
   for i in $( echo "nginx python3 net-tools bc expect v4l-utils iptables vim dos2unix 
-screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
+screen tmate nfs-common gpiod dialog iptables dnsmasq git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
   do
     echo "apt-get install -y $i"
     apt-get install -y $i > /dev/null
@@ -300,7 +302,6 @@ screen tmate nfs-common gpiod ffmpeg dialog iptables dnsmasq git python3-pip tes
 
   install-python-packages
 
-  pip3 install dbus_next zstandard
   echo "-> Make tesseract data link"
   ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
 
@@ -348,7 +349,8 @@ MYSCRIPT
 
   chmod +x /tmp/syspath.py
 
-  PYTHONDIR=$( /tmp/syspath.py | grep packages | sed -e 's/, /\n/g' -e 's/\[//g' -e 's/\]//g' -e "s+'++g" | tail -1 )
+  PYTHONDIR_SYS=$( /tmp/syspath.py | grep packages | sed -e 's/, /\n/g' -e 's/\[//g' -e 's/\]//g' -e "s+'++g" | tail -1 )
+  PYTHONDIR_PIP=$( python3 -c "import site; print(site.getsitepackages()[0])" )
 } # end python-pkg-dir
 
 fix-nginx-symlinks() {
@@ -367,18 +369,18 @@ fix-nginx-symlinks() {
 
   python-pkg-dir
 
-  if [ ! -e $PYTHONDIR/kvmd ]; then
+  if [ ! -e $PYTHONDIR_PIP/kvmd ]; then
     # Debian python版本比 pikvm官方的低一些
-    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR}
+    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR_PIP}
   fi
 } # end fix-nginx-symlinks
 
 fix-python-symlinks(){
     python-pkg-dir
 
-  if [ ! -e $PYTHONDIR/kvmd ]; then
+  if [ ! -e $PYTHONDIR_PIP/kvmd ]; then
     # Debian python版本比 pikvm官方的低一些
-    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR}
+    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR_PIP}
   fi
 }
 
@@ -398,12 +400,41 @@ apply-custom-patch(){
 
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
-  cd $PYTHONDIR
-  if [[ "$DEBIAN_PYTHON" -eq 1 ]]; then
-    $GIT_EXE apply ${APP_PATH}/patches/debian_python/*.patch
+  if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
+    cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/
+  else
+    cd $PYTHONDIR_PIP
   fi
+
+  # if [[ "$DEBIAN_PYTHON" -eq 1 ]]; then
+    # if [ `$KVMD_VERSION < 3.134` -eq ]; then
+    #   PATCH_VER="v3.90"
+    # fi
+    # if [ `$KVMD_VERSION \>= 3.134` -eq 1 ]; then
+    #   PATCH_VER="v3.134"
+    # fi
+    # if [ ! -z "$PATCH_VER" ]; then
+    #   $GIT_EXE apply ${APP_PATH}/patches/debian_python/$PATCH_VER/*.patch
+    # fi
+  # fi
   if [[ "$USE_GPIO" -eq 0 ]]; then
-    $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/*.patch
+    PATCH_VER=""
+    if [ `$KVMD_VERSION \<= 3.81` -eq 1 ]; then
+      PATCH_VER="v3.47-v3.81"
+    fi
+    if [ `$KVMD_VERSION \>= 3.82 && $KVMD_VERSION \<= 3.83` -eq 1 ]; then
+      PATCH_VER="v3.82-v3.83"
+    fi
+    if [ `$KVMD_VERSION \>= 3.84 && $KVMD_VERSION \< 3.134` -eq 1 ]; then
+      PATCH_VER="v3.84-v3.134"
+    fi
+    if [ ! -z "$PATCH_VER" ]; then
+      $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch
+    fi
+  fi
+  if [ `$KVMD_VERSION \>= 3.84 && $KVMD_VERSION \<= 3.92` -eq 1 ]; then
+      PATCH_VER="v3.84-v3.92"
+      $GIT_EXE apply ${APP_PATH}/patches/genernal/$PATCH_VER/*.patch
   fi
   cd ${APP_PATH}
   read -p "Do you want to apply custom patches?  [y/n] " answer
