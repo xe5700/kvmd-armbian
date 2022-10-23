@@ -233,6 +233,7 @@ install-kvmd-pkgs() {
     cd $APP_PATH
     rm -rf /tmp/kvmd-tmp
   fi
+  cp bin/* /usr/bin/
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
   for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'janus|webterm' )
   do
