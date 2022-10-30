@@ -210,9 +210,11 @@ install-kvmd-pkgs() {
   date > $INSTLOG 
 
 # uncompress platform package first
-  i="${KVMDCACHE}/${platform}-*.tar.xz" 
-  echo "-> Extracting package $i into /" >> "$INSTLOG" 
-  tar -vxf "$i"
+  for i in $( ls "${KVMDCACHE}/${platform}-*.tar.xz" )
+  do
+    echo "-> Extracting package $i into /" >> "$INSTLOG" 
+    tar -vxf "$i"
+  done
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
   for i in $( ls "${KVMDCACHE}/*.tar.xz" | egrep 'kvmd-[0-9]' )
