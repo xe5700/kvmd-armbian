@@ -333,12 +333,12 @@ install-dependencies() {
 
   echo "-> Install ustreamer"
   if [ ! -e /usr/bin/ustreamer ]; then
-    apt install ustreamer
-    # cd /tmp
-	  # apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
+    # apt install ustreamer
+    cd /tmp/
+	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
     # ### required dependent packages for ustreamer ###
-    # build-ustreamer
-    # cd ${APP_PATH}
+    build-ustreamer
+    cd ${APP_PATH}
   fi
 } # end install-dependencies
 
