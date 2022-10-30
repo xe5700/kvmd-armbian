@@ -6,10 +6,11 @@ if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
 else
     cd $PYTHONDIR_PIP
 fi
-if [ `$KVMD_VERSION \>= 3.84 && $KVMD_VERSION \<= 3.92` -eq 1 ]; then
+PATCH_VER=""
+if [ `expr $KVMD_SV \>= 84` -eq 1 ] && [ `expr $KVMD_SV \<= 92` -eq 1 ]; then
       PATCH_VER="v3.84-v3.134"
 fi
-if [ `$KVMD_VERSION \>= 3.124 && $KVMD_VERSION \<= 3.142` -eq 1 ]; then
+if [ `expr $KVMD_SV \>= 124` -eq 1 ] && [ `expr $KVMD_SV \<= 142` -eq 1 ]; then
       PATCH_VER="v3.124-v3.142"
 fi
 git apply ${APP_PATH}/${PATCH_VER}/*.patch

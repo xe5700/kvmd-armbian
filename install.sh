@@ -21,6 +21,8 @@ source config.sh
 source $DOWNLOAD_FUNC
 set +x
 APP_PATH=$(readlink -f $(dirname $0))
+export KVMD_BV=`echo $KVMD_VERSION | awk '{print substr($1,1,1)}'`
+export KVMD_SV=`echo $KVMD_VERSION | awk '{print substr($1,3)}'`
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
   echo "usage:  $0 [-f]   where -f will force re-install new pikvm platform"
@@ -90,7 +92,7 @@ install-python-packages() {
   for i in $( echo "aiofiles appdirs asn1crypto async-timeout bottle cffi chardet click 
 colorama cryptography dateutil dbus hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
 packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
-setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl zstd" )
+setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl" )
   do
     echo "apt-get install python3-$i -y"
     apt-get install python3-$i -y > /dev/null
@@ -159,23 +161,24 @@ boot-files() {
 
 get-packages() { 
   printf "\n\n-> Getting Pi-KVM packages from ${PIKVMREPO}\n\n"
-  mkdir -p ${KVMDCACHE}
+  mkdir -p "${KVMDCACHE}"
   #echo "wget ${PIKVMREPO} -O ${PKGINFO}"
-  download ${PIKVMREPO} ${PKGINFO}
+  rm -f "${PKGINFO}"
+  download "${PIKVMREPO}${PIKVMREPO_PKG}" "${PKGINFO}"
   echo "import Pi-Kvm Repo Key"
   gpg --keyserver keyserver.ubuntu.com --recv-keys $PIKVM_KEY
   gpg -a --export $PIKVM_KEY | apt-key add -
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
-  for pkg in `egrep 'janus|kvmd' ${PKGINFO} | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
+  for pkg in `egrep 'janus|kvmd' "${PKGINFO}" | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
   do
-    rm -f ${KVMDCACHE}/$pkg.sig 
-    download ${PIKVMREPO}/$pkg.sig ${KVMDCACHE}/$pkg.sig 
-    download ${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg gpg ${KVMDCACHE}/$pkg.sig
+    rm -f "${KVMDCACHE}/$pkg.sig"
+    download "${PIKVMREPO}/$pkg.sig" "${KVMDCACHE}/$pkg.sig"
+    download "${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg gpg ${KVMDCACHE}/$pkg.sig"
   done
 
   echo
   echo "ls -l ${KVMDCACHE}"
-  ls -l ${KVMDCACHE}
+  ls -l "${KVMDCACHE}"
   echo
 } # end get-packages function
 
@@ -203,44 +206,44 @@ get-platform() {
 install-kvmd-pkgs() {
   cd /
 
-  INSTLOG="${KVMDCACHE}/installed_ver.txt"; rm -f $INSTLOG 
+  INSTLOG="${KVMDCACHE}/installed_ver.txt"; rm -f "$INSTLOG"
   date > $INSTLOG 
 
 # uncompress platform package first
-  i=$( ls ${KVMDCACHE}/${platform}-*.tar.xz )
-  echo "-> Extracting package $i into /" >> $INSTLOG 
-  tar xfJ $i 
+  i="${KVMDCACHE}/${platform}-*.tar.xz" 
+  echo "-> Extracting package $i into /" >> "$INSTLOG" 
+  tar -vxf "$i"
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'kvmd-[0-9]' )
+  for i in $( ls "${KVMDCACHE}/*.tar.xz" | egrep 'kvmd-[0-9]' )
   do
-    echo "-> Extracting package $i into /" >> $INSTLOG
+    echo "-> Extracting package $i into /" >> "$INSTLOG"
     if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
-      tar xfJ $i --exclude=/usr/lib/python3.10
+      tar -vxf $i --exclude=/usr/lib/python3.10/*
     else
-      tar xfJ $i
+      tar -vxf $i
     fi
   done
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
   # Use custom kvmd version replace kvmd offical package
     apt install python3-setuptools
-    rm ${KVMDCACHE}/kvmd.tar.gz
-    download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz ${KVMDCACHE}/kvmd.tar.gz
+    rm "${KVMDCACHE}/kvmd.tar.gz"
+    download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz "${KVMDCACHE}/kvmd.tar.gz"
     mkdir -p /tmp/kvmd-tmp
-    tar axf ${KVMDCACHE}/kvmd.tar.gz -C /tmp/kvmd-tmp
-    cd /tmp/kvmd-tmp/kvmd-$KVMD_VERSION/
-    setup.py install
-    cd $APP_PATH
+    tar axf "${KVMDCACHE}/kvmd.tar.gz" -C /tmp/kvmd-tmp
+    cd "/tmp/kvmd-tmp/kvmd-$KVMD_VERSION/"
+    ./setup.py install
+    cd "$APP_PATH"
     rm -rf /tmp/kvmd-tmp
   fi
   cp bin/* /usr/bin/
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
   for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'janus|webterm' )
   do
-    echo "-> Extracting package $i into /" >> $INSTLOG 
-    tar xfJ $i
+    echo "-> Extracting package $i into /" >> "$INSTLOG"
+    tar xfJ "$i"
   done
-  cd ${APP_PATH}
+  cd "${APP_PATH}"
 } # end install-kvmd-pkgs
 
 fix-udevrules() { 
@@ -276,7 +279,7 @@ build-ustreamer() {
   fi
   # Download ustreamer source and build it
   cd /tmp
-  $GIT_EXE clone $GIT_CLONE_WITH_DEPTH $MIRROR_GITHUB/pikvm/ustreamer
+  $GIT_EXE clone $GIT_CLONE_WITH_DEPTH "$MIRROR_GITHUB/pikvm/ustreamer"
   cd ustreamer/
   # if [[ $( uname -m ) == "aarch64" ]]; then
   #   make WITH_OMX=0 WITH_GPIO=1 WITH_SETPROCTITLE=1	# ustreamer doesn't support 64-bit hardware OMX 
@@ -294,8 +297,7 @@ install-dependencies() {
   echo "-> Installing dependencies for pikvm"
 
   apt-get update > /dev/null
-  for i in $( echo "nginx python3 net-tools bc expect v4l-utils iptables vim dos2unix 
-screen tmate nfs-common gpiod dialog iptables dnsmasq git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
+  for i in $( echo "nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
   do
     echo "apt-get install -y $i"
     apt-get install -y $i > /dev/null
@@ -331,11 +333,12 @@ screen tmate nfs-common gpiod dialog iptables dnsmasq git python3-pip tesseract-
 
   echo "-> Install ustreamer"
   if [ ! -e /usr/bin/ustreamer ]; then
-    cd /tmp
-	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
-    ### required dependent packages for ustreamer ###
-    build-ustreamer
-    cd ${APP_PATH}
+    apt install ustreamer
+    # cd /tmp
+	  # apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
+    # ### required dependent packages for ustreamer ###
+    # build-ustreamer
+    # cd ${APP_PATH}
   fi
 } # end install-dependencies
 
@@ -401,6 +404,7 @@ apply-custom-patch(){
 
 fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
+  python-pkg-dir
   if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
     cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/
   else
@@ -418,22 +422,22 @@ fix-kvmd-for-tvbox-armbian(){
     #   $GIT_EXE apply ${APP_PATH}/patches/debian_python/$PATCH_VER/*.patch
     # fi
   # fi
-  if [[ "$USE_GPIO" -eq 0 ]]; then
+  if [[ "$USE_GPIO" -eq 0 ]] && [[ "$KVMD_BV" -eq "3" ]] ; then
     PATCH_VER=""
-    if [ `$KVMD_VERSION \<= 3.81` -eq 1 ]; then
+    if [ `expr $KVMD_SV \<= 81` -eq 1 ]; then
       PATCH_VER="v3.47-v3.81"
     fi
-    if [ `$KVMD_VERSION \>= 3.82 && $KVMD_VERSION \<= 3.83` -eq 1 ]; then
+    if [ `expr $KVMD_SV \>= 82` -eq 1 ] && [ `expr $KVMD_SV \<= 83` -eq 1 ]; then
       PATCH_VER="v3.82-v3.83"
     fi
-    if [ `$KVMD_VERSION \>= 3.84 && $KVMD_VERSION \< 3.134` -eq 1 ]; then
+    if [ `expr $KVMD_SV \>= 84` -eq 1 ] && [ `expr $KVMD_SV \<= 134` -eq 1 ]; then
       PATCH_VER="v3.84-v3.134"
     fi
     if [ ! -z "$PATCH_VER" ]; then
       $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch
     fi
   fi
-  if [ `$KVMD_VERSION \>= 3.84 && $KVMD_VERSION \<= 3.92` -eq 1 ]; then
+  if [ `expr $KVMD_SV \>= 84` -eq 1 ] && [ `expr $KVMD_SV \<= 92` -eq 1 ]; then
       PATCH_VER="v3.84-v3.92"
       $GIT_EXE apply ${APP_PATH}/patches/genernal/$PATCH_VER/*.patch
   fi

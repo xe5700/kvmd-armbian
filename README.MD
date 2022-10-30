@@ -40,3 +40,10 @@ cd kvmd-armbian
  - RK322x based tvbox (MXQ, V88)
  - S905L2 based tvbox
  - Orange pi zero (tested by @MrSuicideParrot)
+
+
+# Update log
+## Version 1.0
+    
+## Version 2.0
+    Now support download hook, config file, diffrent version of kvmd, and fix lots of bug.

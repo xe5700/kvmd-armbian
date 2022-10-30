@@ -3,6 +3,7 @@ export MIRROR_GITHUB="https://github.com"
 export MIRROR_GITHUB_API="https://api.github.com"
 
 export PIKVMREPO="https://files.pikvm.org/repos/arch/rpi4"
+export PIKVMREPO_PKG="/"
 #export PIKVMREPO=""
 #export KVMD_VERSION="3.47" # LEGECY KVMD VERSION SUPPORTS MSD AND RUNNING ON DEBIAN BULLSEYE OR BUSTER WITHOUT PATCH
 
@@ -20,4 +21,5 @@ export USE_JANUS=0
 export USE_CSI=0
 #export HID_MODE="" # Allow otg, ch9329, arduino, bluetooth mode
 export USE_MSD=0
+export USE_UDEV=0
 #export PLATFORM_PATCH # Apply patch for board platform
