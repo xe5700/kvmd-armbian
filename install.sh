@@ -226,7 +226,7 @@ install-kvmd-pkgs() {
   done
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
   # Use custom kvmd version replace kvmd offical package
-    apt install python3-setuptools
+    apt install python3-setuptools -y
     rm "${KVMDCACHE}/kvmd.tar.gz"
     download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz "${KVMDCACHE}/kvmd.tar.gz"
     mkdir -p /tmp/kvmd-tmp
