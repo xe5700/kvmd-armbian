@@ -46,4 +46,4 @@ cd kvmd-armbian
 ## Version 1.0
     
 ## Version 2.0
-    Now support download hook, config file, diffrent version of kvmd, and fix lots of bug.
+    Now support download hook, config file, diffrent version of kvmd, and fix lots of bug. 
