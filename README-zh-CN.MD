@@ -141,19 +141,19 @@
   - 我的输出内容为输出：
 
   - ```
-  root@king3399:~# lsusb
-  Bus 002 Device 002: ID 345f:2130 UltraSemi USB3 Video
-  Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-  Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-  Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-  Bus 003 Device 003: ID 0c45:768a Microdia USB DEVICE
-  Bus 003 Device 002: ID 05e3:0608 Genesys Logic, Inc. Hub
-  Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-  Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-  Bus 006 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-  root@king3399:~#
-  ```
-
+    root@king3399:~# lsusb
+    Bus 002 Device 002: ID 345f:2130 UltraSemi USB3 Video
+    Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+    Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+    Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+    Bus 003 Device 003: ID 0c45:768a Microdia USB DEVICE
+    Bus 003 Device 002: ID 05e3:0608 Genesys Logic, Inc. Hub
+    Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+    Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+    Bus 006 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+    root@king3399:~#
+    ```
+  
 - 5.尝试重启你的视频采集设备(我的设备为UltraSemi USB3 Video 对应为002/002)
 
 - ```
@@ -169,10 +169,10 @@
   - 添加内容
 
   - ```
-  sleep 5
-  /root/usbreset /dev/bus/usb/002/002
-  ```
-
+    sleep 5
+    /root/usbreset /dev/bus/usb/002/002
+    ```
+  
 - 7.重启开发版再次查看
 
 #### 更改PI KVM 登陆密码
@@ -184,16 +184,11 @@
 - 输入你需要的密码即可
 
 #### 感谢,如果没有他们我不可能做到
-- kvmd-armbian
 
-  - [xe5700](https://github.com/xe5700/kvmd-armbian)
+- [kvmd-armbian](https://github.com/xe5700/kvmd-armbian)
 
 - [peacokswiss](https://github.com/xe5700/kvmd-armbian/issues/12)
 
-- armkvm
-
-  - [wxjiyc](https://github.com/wxjiyc/amlogic-s9xxx-armbian/blob/main/rebuild#L629)
+- [armkvm](https://github.com/wxjiyc/amlogic-s9xxx-armbian/blob/main/rebuild#L629)
   
-- usbreset
-
-  - [usbreset](https://github.com/jkulesza/usbreset)
+- [usbreset](https://github.com/jkulesza/usbreset)
