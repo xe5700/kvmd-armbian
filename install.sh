@@ -90,7 +90,7 @@ CSIOVERRIDE
 
 install-python-packages() { 
   for i in $( echo "aiofiles appdirs asn1crypto async-timeout bottle cffi chardet click 
-colorama cryptography dateutil dbus hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
+colorama cryptography dateutil dbus dev hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
 packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
 setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl" )
   do
