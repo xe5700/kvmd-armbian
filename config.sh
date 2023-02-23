@@ -1,3 +1,4 @@
+export APT_EXE="apt-get" #If you installed apt-fast can change it to apt-fast to boost install speed.
 export GIT_EXE="git"
 export MIRROR_GITHUB="https://github.com"
 export MIRROR_GITHUB_API="https://api.github.com"

@@ -98,7 +98,7 @@ setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl
     pkgs="$pkgs python3-$i"
   done
   echo "-> Install python packages"
-  apt-get install $pkgs -y > /dev/null
+  $APT_EXE install $pkgs -y > /dev/null
   # U
   pip3 install dbus_next==0.2.3 zstandard==0.18.0 pyserial==3.5 aiohttp==3.8.3
 } # end install python-packages
@@ -119,8 +119,8 @@ install-tc358743() {
   echo "deb https://www.linux-projects.org/listing/uv4l_repo/raspbian/stretch stretch main" | tee /etc/apt/sources.list.d/uv4l.list
 
   apt-get update > /dev/null
-  echo "apt-get install uv4l-tc358743-extras -y" 
-  apt-get install uv4l-tc358743-extras -y > /dev/null
+  echo "$APT_EXE install uv4l-tc358743-extras -y" 
+  $APT_EXE install uv4l-tc358743-extras -y > /dev/null
 } # install package for tc358743
 
 boot-files() { 
@@ -230,7 +230,7 @@ install-kvmd-pkgs() {
   done
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
   # Use custom kvmd version replace kvmd offical package
-    apt install python3-setuptools -y
+    $APT_EXE install python3-setuptools -y
     rm "${KVMDCACHE}/kvmd.tar.gz"
     download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz "${KVMDCACHE}/kvmd.tar.gz"
     mkdir -p /tmp/kvmd-tmp
@@ -273,13 +273,13 @@ enable-kvmd-svcs() {
 build-ustreamer() {
   printf "\n\n-> Building ustreamer\n\n"
   # Install packages needed for building ustreamer source
-  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
-  apt install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
+  echo "$APT_EXE install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
+  $APT_EXE install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
   if [[ $USE_GPIO -eq 1 ]]; then
-    apt install -y libgpiod-dev
+    $APT_EXE install -y libgpiod-dev
   fi
   if [[ $USE_JANUS -eq 1 ]]; then
-    apt install -y janus-dev janus
+    $APT_EXE install -y janus-dev janus
   fi
   # Download ustreamer source and build it
   cd /tmp
@@ -303,22 +303,22 @@ install-dependencies() {
   apt-get update > /dev/null
   # for i in $( echo "" )
   # do
-  #   echo "apt-get install -y $i"
-  #   apt-get install -y $i > /dev/null
+  #   echo "$APT_EXE install -y $i"
+  #   $APT_EXE install -y $i > /dev/null
   # done
   echo "-> Install basic packages"
-  apt-get install -y nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq
+  $APT_EXE install -y nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq
   install-python-packages
 
   echo "-> Make tesseract data link"
   ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
 
   echo "-> Install TTYD"
-  apt install -y ttyd
+  $APT_EXE install -y ttyd
   if [ ! -e /usr/bin/ttyd ]; then
     # Build and install ttyd
     # cd /tmp
-    # apt-get install -y build-essential cmake git libjson-c-dev libwebsockets-dev
+    # $APT_EXE install -y build-essential cmake git libjson-c-dev libwebsockets-dev
     # git clone --depth=1 https://github.com/tsl0922/ttyd.git
     # cd ttyd && mkdir build && cd build
     # cmake ..
@@ -340,7 +340,7 @@ install-dependencies() {
   if [ ! -e /usr/bin/ustreamer ]; then
     # apt install ustreamer
     cd /tmp/
-	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
+	  $APT_EXE install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
     # ### required dependent packages for ustreamer ###
     build-ustreamer
     cd ${APP_PATH}
