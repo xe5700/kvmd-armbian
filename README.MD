@@ -2,7 +2,7 @@
 This project support non Raspberry Pi device to running pikvm on armbian
 
 # Chinese installation steps
-Chinese installation steps by toss-a [https://github.com/toss-a/pikvm-armbian/blob/master/README-zh-CN.MD]
+Chinese installation steps by toss-a [https://github.com/xe5700/pikvm-armbian/blob/master/README-zh-CN.MD]
 
 # Install
 KVMD Install for armbian
