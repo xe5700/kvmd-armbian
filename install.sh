@@ -88,15 +88,17 @@ CSIOVERRIDE
   fi
 } # end create-override
 
-install-python-packages() { 
+install-python-packages() {
+pkgs=""
   for i in $( echo "aiofiles appdirs asn1crypto async-timeout bottle cffi chardet click 
 colorama cryptography dateutil dbus dev hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
 packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
 setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl" )
   do
-    echo "apt-get install python3-$i -y"
-    apt-get install python3-$i -y > /dev/null
+    pkgs="$pkgs python3-$i"
   done
+  echo "-> Install python packages"
+  apt-get install $pkgs -y > /dev/null
   # U
   pip3 install dbus_next==0.2.3 zstandard==0.18.0 pyserial==3.5 aiohttp==3.8.3
 } # end install python-packages
@@ -299,12 +301,13 @@ install-dependencies() {
   echo "-> Installing dependencies for pikvm"
 
   apt-get update > /dev/null
-  for i in $( echo "nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
-  do
-    echo "apt-get install -y $i"
-    apt-get install -y $i > /dev/null
-  done
-
+  # for i in $( echo "" )
+  # do
+  #   echo "apt-get install -y $i"
+  #   apt-get install -y $i > /dev/null
+  # done
+  echo "-> Install basic packages"
+  apt-get install -y nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq
   install-python-packages
 
   echo "-> Make tesseract data link"
@@ -591,6 +594,8 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
     sed -i -e 's/reversed//g' $PYTHONDIR/kvmd/keyboard/printer.py
   fi
 
+  sync
+  echo "-> Synced data, you can reboot system safety."
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
   press-enter
@@ -607,6 +612,7 @@ else
   enable-kvmd-svcs
   start-kvmd-svcs
 
+  sync
   printf "\nCheck kvmd devices\n\n" 
   ls -l /dev/kvmd*
   printf "\nYou should see devices for keyboard, mouse, and video.\n"
