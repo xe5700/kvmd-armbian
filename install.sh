@@ -160,7 +160,6 @@ boot-files() {
   printf "\n/etc/modules\n\n"
   cat /etc/modules
 } # end of necessary boot files
-
 get-packages() { 
   printf "\n\n-> Getting Pi-KVM packages from ${PIKVMREPO}\n\n"
   mkdir -p "${KVMDCACHE}"
@@ -171,11 +170,12 @@ get-packages() {
   gpg --keyserver keyserver.ubuntu.com --recv-keys $PIKVM_KEY
   gpg -a --export $PIKVM_KEY | apt-key add -
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
-  pkgs=`egrep 'janus|kvmd' "${PKGINFO}" | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
+  PIKVM_PKGS_CMD="egrep 'janus|kvmd' \"${PKGINFO}\" | grep -v sig | cut -d'>' -f1 | cut -d'\"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'"
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
-    pkgs=`printf "$d" | egrep -v 'kvmd-[0-9]'`
+    PIKVM_PKGS_CMD="$PIKVM_PKGS_CMD | egrep -v 'kvmd-[0-9]'"
   fi
-  for pkg in $pkgs
+  PIKVM_PKGS=`$PIKVM_PKGS_CMD`
+  for pkg in $PIKVM_PKGS
   do
     rm -f "${KVMDCACHE}/$pkg.sig"
     download "${PIKVMREPO}/$pkg.sig" "${KVMDCACHE}/$pkg.sig"
@@ -223,35 +223,27 @@ install-kvmd-pkgs() {
 #   done
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls "${KVMDCACHE}/*.tar.xz" | egrep 'kvmd-[0-9]' )
+
+  for i in $PIKVM_PKGS
   do
     echo "-> Extracting package $i into /" >> "$INSTLOG"
     tar -vxf $i
   done
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
   # Use custom kvmd version replace kvmd offical package
-    rm "${KVMDCACHE}/kvmd-common.tar.gz"
     download "${KVMD_COMMON_PKG_URL}" "${KVMDCACHE}/kvmd-common.tar.gz"
     echo "-> Extracting common kvmd package into /" >> "$INSTLOG"
     tar -vxf "${KVMDCACHE}/kvmd-common.tar.gz"
     echo "-> Install custom version kvmd" >> "$INSTLOG"
     $APT_EXE install python3-setuptools -y
-    rm "${KVMDCACHE}/kvmd.tar.gz"
-    download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz "${KVMDCACHE}/kvmd.tar.gz"
-    mkdir -p ${KVMDCACHE}/kvmd-tmp
-    tar axf "${KVMDCACHE}/kvmd.tar.gz" -C /tmp/kvmd-tmp
+    download "${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz" "${KVMDCACHE}/kvmd.tar.gz"
+    mkdir -p "${KVMDCACHE}/kvmd-tmp"
+    tar axf "${KVMDCACHE}/kvmd.tar.gz" -C "${KVMDCACHE}/kvmd-tmp"
     cd "${KVMDCACHE}/kvmd-tmp/kvmd-$KVMD_VERSION/"
     ./setup.py install
     cd "$APP_PATH"
-    rm -rf {KVMDCACHE}/kvmd-tmp
+    rm -rf "${KVMDCACHE}/kvmd-tmp"
   fi
-  cp bin/* /usr/bin/
-# then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'janus|webterm' )
-  do
-    echo "-> Extracting package $i into /" >> "$INSTLOG"
-    tar xfJ "$i"
-  done
   cd "${APP_PATH}"
 } # end install-kvmd-pkgs
 
@@ -416,7 +408,8 @@ fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   python-pkg-dir
   if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
-    cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/
+    local xpath=`sh -c "ls '$PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/'"`
+    cd $xpath
   else
     cd $PYTHONDIR_PIP
   fi
@@ -444,12 +437,12 @@ fix-kvmd-for-tvbox-armbian(){
       PATCH_VER="v3.84-v3.134"
     fi
     if [ ! -z "$PATCH_VER" ]; then
-      $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch
+      sh -c "$GIT_EXE apply '${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch'"
     fi
   fi
   if [ `expr $KVMD_SV \>= 84` -eq 1 ] && [ `expr $KVMD_SV \<= 92` -eq 1 ]; then
       PATCH_VER="v3.84-v3.92"
-      $GIT_EXE apply ${APP_PATH}/patches/genernal/$PATCH_VER/*.patch
+      sh -c "$GIT_EXE apply '${APP_PATH}/patches/genernal/$PATCH_VER/*.patch'"
   fi
   cd ${APP_PATH}
   read -p "Do you want to apply custom patches?  [y/n] " answer
@@ -572,7 +565,8 @@ armbian-packages() {
   cd ${APP_PATH}
   # 
 }	#end armbian-packages
-
+$APT_EXE update
+$APT_EXE -y install python3 xz-utils tar wget aria2 curl
 ### MAIN STARTS HERE ###
 # Install is done in two parts
 # First part requires a reboot in order to create kvmd users and groups
