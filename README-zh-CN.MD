@@ -1,3 +1,5 @@
+# 感谢由toss-a编写的中文教程
+该教程未验证，可能需要使用https://github.com/toss-a/pikvm-armbian的分叉才能运行。
 # 硬件准备
 
 ## 开发版选择 
