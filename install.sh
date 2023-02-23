@@ -171,7 +171,11 @@ get-packages() {
   gpg --keyserver keyserver.ubuntu.com --recv-keys $PIKVM_KEY
   gpg -a --export $PIKVM_KEY | apt-key add -
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
-  for pkg in `egrep 'janus|kvmd' "${PKGINFO}" | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
+  pkgs=`egrep 'janus|kvmd' "${PKGINFO}" | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
+  if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
+    pkgs=`printf "$d" | egrep -v 'kvmd-[0-9]'`
+  fi
+  for pkg in $pkgs
   do
     rm -f "${KVMDCACHE}/$pkg.sig"
     download "${PIKVMREPO}/$pkg.sig" "${KVMDCACHE}/$pkg.sig"
@@ -211,34 +215,35 @@ install-kvmd-pkgs() {
   INSTLOG="${KVMDCACHE}/installed_ver.txt"; rm -f "$INSTLOG"
   date > $INSTLOG 
 
-# uncompress platform package first
-  for i in $( ls "${KVMDCACHE}/${platform}-*.tar.xz" )
-  do
-    echo "-> Extracting package $i into /" >> "$INSTLOG" 
-    tar -vxf "$i"
-  done
+# # uncompress platform package first
+#   for i in $( ls "${KVMDCACHE}/${platform}-*.tar.xz" )
+#   do
+#     echo "-> Extracting package $i into /" >> "$INSTLOG" 
+#     tar -vxf "$i"
+#   done
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
   for i in $( ls "${KVMDCACHE}/*.tar.xz" | egrep 'kvmd-[0-9]' )
   do
     echo "-> Extracting package $i into /" >> "$INSTLOG"
-    if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
-      tar -vxf $i --exclude=/usr/lib/python3.10/*
-    else
-      tar -vxf $i
-    fi
+    tar -vxf $i
   done
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
   # Use custom kvmd version replace kvmd offical package
+    rm "${KVMDCACHE}/kvmd-common.tar.gz"
+    download "${KVMD_COMMON_PKG_URL}" "${KVMDCACHE}/kvmd-common.tar.gz"
+    echo "-> Extracting common kvmd package into /" >> "$INSTLOG"
+    tar -vxf "${KVMDCACHE}/kvmd-common.tar.gz"
+    echo "-> Install custom version kvmd" >> "$INSTLOG"
     $APT_EXE install python3-setuptools -y
     rm "${KVMDCACHE}/kvmd.tar.gz"
     download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz "${KVMDCACHE}/kvmd.tar.gz"
-    mkdir -p /tmp/kvmd-tmp
+    mkdir -p ${KVMDCACHE}/kvmd-tmp
     tar axf "${KVMDCACHE}/kvmd.tar.gz" -C /tmp/kvmd-tmp
-    cd "/tmp/kvmd-tmp/kvmd-$KVMD_VERSION/"
+    cd "${KVMDCACHE}/kvmd-tmp/kvmd-$KVMD_VERSION/"
     ./setup.py install
     cd "$APP_PATH"
-    rm -rf /tmp/kvmd-tmp
+    rm -rf {KVMDCACHE}/kvmd-tmp
   fi
   cp bin/* /usr/bin/
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 

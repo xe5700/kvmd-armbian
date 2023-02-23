@@ -9,6 +9,7 @@ export PIKVMREPO_PKG="/"
 #export KVMD_VERSION="3.47" # LEGECY KVMD VERSION SUPPORTS MSD AND RUNNING ON DEBIAN BULLSEYE OR BUSTER WITHOUT PATCH
 
 # export KVMD_VERSION=""
+export KVMD_COMMON_PKG_URL="https://$MIRROR_GITHUB/xe5700/kvmd-armbian-repo/raw/master/kvmd-common.tar.xz"
 export CUSTOM_KVMD_VERSION=1 # If you want install lastest version of kvmd set to 0
 export KVMD_VERSION="3.142" # LAST KVMD VERSION SUPPORTS PYTHON3.9 
 export PIKVM_KEY="912C773ABBD1B584"
