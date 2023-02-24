@@ -17,7 +17,7 @@ export USE_GPIO=0
 export DEBIAN_PYTHON=1
 export KVMDCACHE="/var/cache/kvmd"
 export PKGINFO="${KVMDCACHE}/packages.txt"
-export DOWNLOAD_FUNC="./libs/download_aria2.sh"
+export DOWNLOAD_FUNC="./libs/download_wget.sh" # can change to ./lib/download_aria2.sh to boost download speed.
 export GIT_CLONE_WITH_DEPTH="--depth=1"
 export USE_JANUS=0
 export USE_CSI=0
