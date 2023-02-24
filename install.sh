@@ -245,6 +245,7 @@ install-kvmd-pkgs() {
     rm -rf "${KVMDCACHE}/kvmd-tmp"
   fi
   cd "${APP_PATH}"
+  cp bin/* /usr/bin/
 } # end install-kvmd-pkgs
 
 fix-udevrules() { 
