@@ -1,8 +1,9 @@
 #!/bin/bash
+# PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
 APP_PATH=$(readlink -f $(dirname $0))
 echo "-> Apply patches"
 if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
-    cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/
+    cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py${PYTHON_VERSION}.egg/
 else
     cd $PYTHONDIR_PIP
 fi

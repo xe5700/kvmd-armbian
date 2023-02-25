@@ -314,6 +314,7 @@ install-dependencies() {
   echo "-> Install TTYD"
   $APT_EXE install -y ttyd
   if [ ! -e /usr/bin/ttyd ]; then
+    echo "-> Download from apt failed, try download offical lastest version binary file."
     # Build and install ttyd
     # cd /tmp
     # $APT_EXE install -y build-essential cmake git libjson-c-dev libwebsockets-dev
@@ -356,8 +357,8 @@ MYSCRIPT
 
   chmod +x /tmp/syspath.py
 
-  PYTHONDIR_SYS=$( /tmp/syspath.py | grep packages | sed -e 's/, /\n/g' -e 's/\[//g' -e 's/\]//g' -e "s+'++g" | tail -1 )
-  PYTHONDIR_PIP=$( python3 -c "import site; print(site.getsitepackages()[0])" )
+  export PYTHONDIR_SYS=$( /tmp/syspath.py | grep packages | sed -e 's/, /\n/g' -e 's/\[//g' -e 's/\]//g' -e "s+'++g" | tail -1 )
+  export PYTHONDIR_PIP=$( python3 -c "import site; print(site.getsitepackages()[0])" )
 } # end python-pkg-dir
 
 fix-nginx-symlinks() {
@@ -409,8 +410,7 @@ fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   python-pkg-dir
   if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
-    local xpath=`sh -c "ls '$PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/'"`
-    cd $xpath
+    cd "$PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py${PYTHON_VERSION}.egg"
   else
     cd $PYTHONDIR_PIP
   fi
@@ -573,7 +573,7 @@ $APT_EXE -y install python3 xz-utils tar wget aria2 curl
 # First part requires a reboot in order to create kvmd users and groups
 # Second part will start the necessary kvmd services
 # added option to re-install by adding -f parameter (for use as platform switcher)
-PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
+export PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
 if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   printf "\nRunning part 1 of PiKVM installer script for Raspbian by @srepac\n"
   get-packages
