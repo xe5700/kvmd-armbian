@@ -9,7 +9,7 @@ export PIKVMREPO_PKG="/"
 
 # export KVMD_VERSION=""
 export CUSTOM_KVMD_VERSION=1 # If you want install lastest version of kvmd set to 0
-export KVMD_VERSION="3.142" # LAST KVMD VERSION SUPPORTS PYTHON3.9 
+export KVMD_VERSION="3.293" # LAST KVMD VERSION SUPPORTS PYTHON3.9 
 export PIKVM_KEY="912C773ABBD1B584"
 export USE_GPIO=0
 export DEBIAN_PYTHON=1
