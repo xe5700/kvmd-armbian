@@ -1,4 +1,16 @@
 #!/bin/bash
+
+#Remark: Done with OrangePi Zero 2 (H616 CPU/1GB RAM)
+# fix-aiogp & fix-hwCache, i make, it work,  correct did it ??? it work.
+
+# modified by peacok		2024-01-17	fix-aiogp
+# modified by peacok		2023-11-20	few fixes, remove apt-key, using $PHYTON_VERSION, disabling Pip Install, use only Distributions with python3.11
+# modified by peacok		2023-10-20	fix ttl=5 error, fix-hwCache Routine
+# modified by peacok		2023-07-27     	aiohttp async-lru dbus-next zstandard,  ttl=5 error
+# modified by peacok		2023-07-10     	fix-nginx-symlinks  sed http2
+# modified by peacok		2023-07-03     	add python-is-python3
+# modified by peacok		2023-03-27
+# modified by peacok		2023-07-01	fix for kvmd-webterm
 # modified by xe5700 		2021-11-04	xe5700@outlook.com
 # modified by NewbieOrange	2021-11-04
 # created by @srepac   08/09/2021   srepac@kvmnerds.com
@@ -89,16 +101,21 @@ CSIOVERRIDE
 } # end create-override
 
 install-python-packages() { 
-  for i in $( echo "aiofiles appdirs asn1crypto async-timeout bottle cffi chardet click 
-colorama cryptography dateutil dbus dev hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
-packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
-setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl" )
+  apttmp=""
+  for i in $( echo "aiofiles aiohttp appdirs asn1crypto async-timeout async-lru bottle cffi chardet click 
+colorama cryptography dateutil dbus dbus-next dev hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
+packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing pyotp requests semantic-version serial 
+setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl zstandard" )
   do
-    echo "apt-get install python3-$i -y"
-    apt-get install python3-$i -y > /dev/null
+    apttmp=$apttmp" python3-$i"
   done
-  # U
-  pip3 install dbus_next==0.2.3 zstandard==0.18.0 pyserial==3.5 aiohttp==3.8.3
+  echo
+  echo "apt install -y $apttmp"
+  apt install -y $apttmp
+  #Comapatibilty python - 2023-07-03 add python-is-python3
+  apt install -y python-is-python3
+
+  #pip3 install dbus_next==0.2.3 zstandard==0.18.0 pyserial==3.5 aiohttp==3.8.3
 } # end install python-packages
 
 otg-devices() {
@@ -113,7 +130,7 @@ otg-devices() {
 
 install-tc358743() {
   ### CSI Support for Raspbian ###
-  wget -O- -q https://www.linux-projects.org/listing/uv4l_repo/lpkey.asc | apt-key add -
+  wget -O- -q https://www.linux-projects.org/listing/uv4l_repo/lpkey.asc | tee /etc/apt/trusted.gpg.d/lpkey.asc
   echo "deb https://www.linux-projects.org/listing/uv4l_repo/raspbian/stretch stretch main" | tee /etc/apt/sources.list.d/uv4l.list
 
   apt-get update > /dev/null
@@ -167,15 +184,14 @@ get-packages() {
   download "${PIKVMREPO}${PIKVMREPO_PKG}" "${PKGINFO}"
   echo "import Pi-Kvm Repo Key"
   gpg --keyserver keyserver.ubuntu.com --recv-keys $PIKVM_KEY
-  gpg -a --export $PIKVM_KEY | apt-key add -
+  gpg -a --export $PIKVM_KEY | tee /etc/apt/trusted.gpg.d/pikvm_key.asc
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
   for pkg in `egrep 'janus|kvmd' "${PKGINFO}" | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
   do
     rm -f "${KVMDCACHE}/$pkg.sig"
     download "${PIKVMREPO}/$pkg.sig" "${KVMDCACHE}/$pkg.sig"
-    download "${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg gpg ${KVMDCACHE}/$pkg.sig"
+    download "${PIKVMREPO}/$pkg ${KVMDCACHE}/$pkg" gpg "${KVMDCACHE}/$pkg.sig"
   done
-
   echo
   echo "ls -l ${KVMDCACHE}"
   ls -l "${KVMDCACHE}"
@@ -210,18 +226,18 @@ install-kvmd-pkgs() {
   date > $INSTLOG 
 
 # uncompress platform package first
-  for i in $( ls "${KVMDCACHE}/${platform}-*.tar.xz" )
+  for i in $( ls ${KVMDCACHE}/${platform}-*.tar.xz )
   do
     echo "-> Extracting package $i into /" >> "$INSTLOG" 
     tar -vxf "$i"
   done
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls "${KVMDCACHE}/*.tar.xz" | egrep 'kvmd-[0-9]' )
+  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'kvmd-[0-9]' )
   do
     echo "-> Extracting package $i into /" >> "$INSTLOG"
     if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
-      tar -vxf $i --exclude=/usr/lib/python3.10/*
+      tar -vxf $i --exclude=/usr/lib/"python${PYTHON_VERSION}"/*
     else
       tar -vxf $i
     fi
@@ -244,8 +260,20 @@ install-kvmd-pkgs() {
   do
     echo "-> Extracting package $i into /" >> "$INSTLOG"
     tar xfJ "$i"
+    #apply from 7Jan2023 
+    sync
+    cp "${APP_PATH}"/usr/bin/janus*   /usr/bin
+    cp -a "${APP_PATH}"/usr/include/janus  /usr/include
+    cp -a "${APP_PATH}"/usr/lib/janus  /usr/lib
+    #*****
   done
   cd "${APP_PATH}"
+  #apply from 7Jan2023 , they wars allways missed, no kvmd-webterm user/service 
+  #*****
+  cp usr/lib/sysusers.d/kvmd-webterm.conf  /usr/lib/sysusers.d
+  sed -i 's/Pi-KVM/PiKVM/g' /usr/lib/sysusers.d/kvmd-webterm.conf
+  cp usr/lib/systemd/system/kvmd-webterm.service  /lib/systemd/system
+  #*****
 } # end install-kvmd-pkgs
 
 fix-udevrules() { 
@@ -257,8 +285,8 @@ fix-udevrules() {
 
 enable-kvmd-svcs() { 
   # enable KVMD services but don't start them
-  echo "-> Enabling kvmd-nginx kvmd-webterm kvmd-otg and kvmd services, but do not start them."
-  systemctl enable kvmd-nginx kvmd-webterm kvmd-otg kvmd 
+  echo "-> Enabling kvmd-nginx kvmd-webterm kvmd-otg kvmd-fix and kvmd services, but do not start them."
+  systemctl enable kvmd-nginx kvmd-webterm kvmd-otg kvmd kvmd-fix
 
   # in case going from CSI to USB, then disable kvmd-tc358743 service (in case it's enabled)
   if [[ $USE_CSI -eq 0 ]]; then
@@ -271,13 +299,10 @@ enable-kvmd-svcs() {
 build-ustreamer() {
   printf "\n\n-> Building ustreamer\n\n"
   # Install packages needed for building ustreamer source
-  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
+  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev"
   apt install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
   if [[ $USE_GPIO -eq 1 ]]; then
     apt install -y libgpiod-dev
-  fi
-  if [[ $USE_JANUS -eq 1 ]]; then
-    apt install -y janus-dev janus
   fi
   # Download ustreamer source and build it
   cd /tmp
@@ -297,14 +322,14 @@ build-ustreamer() {
 install-dependencies() {
   echo
   echo "-> Installing dependencies for pikvm"
-
   apt-get update > /dev/null
-  for i in $( echo "nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
+  apttmp=""
+  for i in $( echo "nano vim mc iptables nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq libxkbcommon0" )
   do
-    echo "apt-get install -y $i"
-    apt-get install -y $i > /dev/null
+    apttmp=$apttmp" $i"
   done
-
+  echo "apt install -y $apttmp"
+  apt install -y $apttmp
   install-python-packages
 
   echo "-> Make tesseract data link"
@@ -333,14 +358,22 @@ install-dependencies() {
     chmod +x /usr/bin/ttyd
   fi
 
+  if [[ $USE_JANUS -eq 1 ]]; then
+    echo "-> Install janus janus-dev"
+    apt install -y janus-dev janus
+  fi
+
   echo "-> Install ustreamer"
   if [ ! -e /usr/bin/ustreamer ]; then
-    # apt install ustreamer
-    cd /tmp/
-	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
-    # ### required dependent packages for ustreamer ###
-    build-ustreamer
-    cd ${APP_PATH}
+     if [[ $USE_USTREAMER -eq 1 ]]; then
+       apt -y install ustreamer
+     else  
+       cd /tmp/
+       apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
+        # ### required dependent packages for ustreamer ###
+        build-ustreamer
+        cd ${APP_PATH}
+     fi
   fi
 } # end install-dependencies
 
@@ -371,22 +404,24 @@ fix-nginx-symlinks() {
   if [ ! -e /usr/bin/nginx ]; then ln -s /usr/sbin/nginx /usr/bin/; fi
   if [ ! -e /usr/sbin/python ]; then ln -s /usr/bin/python3 /usr/sbin/python; fi
   if [ ! -e /usr/bin/iptables ]; then ln -s /usr/sbin/iptables /usr/bin/iptables; fi
-  # if [ ! -e /opt/vc/bin/vcgencmd ]; then mkdir -p /opt/vc/bin/; ln -s /usr/bin/vcgencmd /opt/vc/bin/vcgencmd; fi
+  if [ ! -e /usr/bin/vcgencmd ]; then ln -s /opt/vc/bin/vcgencmd /usr/bin/vcgencmd; fi
+  #if [ ! -e /opt/vc/bin/vcgencmd ]; then mkdir -p /opt/vc/bin/; ln -s /usr/bin/vcgencmd /opt/vc/bin/vcgencmd; fi
 
   python-pkg-dir
 
   if [ ! -e $PYTHONDIR_PIP/kvmd ]; then
-    # Debian python版本比 pikvm官方的低一些
-    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR_PIP}
+    # Debian pythonç‰ˆæœ¬æ¯” pikvmå®˜æ–¹çš„ä½Žä¸€äº›
+    ln -s /usr/lib/"python${PYTHON_VERSION}"/site-packages/kvmd* ${PYTHONDIR_PIP}
   fi
+  sed -i 's/http2 on;/#http2 on;/g' /etc/kvmd/nginx/listen-https.conf
 } # end fix-nginx-symlinks
 
 fix-python-symlinks(){
     python-pkg-dir
 
   if [ ! -e $PYTHONDIR_PIP/kvmd ]; then
-    # Debian python版本比 pikvm官方的低一些
-    ln -s /usr/lib/python3.10/site-packages/kvmd* ${PYTHONDIR_PIP}
+    # Debian pythonç‰ˆæœ¬æ¯” pikvmå®˜æ–¹çš„ä½Žä¸€äº›
+    ln -s /usr/lib/"python${PYTHON_VERSION}"/site-packages/kvmd* ${PYTHONDIR_PIP}
   fi
 }
 
@@ -405,7 +440,7 @@ apply-custom-patch(){
 }
 
 fix-kvmd-for-tvbox-armbian(){
-  # 打补丁来移除一些对armbian和电视盒子不太支持的特性
+  # æ‰“è¡¥ä¸æ¥ç§»é™¤ä¸€äº›å¯¹armbianå’Œç”µè§†ç›’å­ä¸å¤ªæ”¯æŒçš„ç‰¹æ€§
   python-pkg-dir
   if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
     cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/
@@ -436,6 +471,9 @@ fix-kvmd-for-tvbox-armbian(){
       PATCH_VER="v3.84-v3.134"
     fi
     if [ ! -z "$PATCH_VER" ]; then
+      echo "-> disable_gpio in ${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch"
+      echo $GIT_EXE
+#      exit 0
       $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch
     fi
   fi
@@ -444,6 +482,8 @@ fix-kvmd-for-tvbox-armbian(){
       $GIT_EXE apply ${APP_PATH}/patches/genernal/$PATCH_VER/*.patch
   fi
   cd ${APP_PATH}
+  echo 
+  echo "Normally you say N (no)..."
   read -p "Do you want to apply custom patches?  [y/n] " answer
   case $answer in
     n|N|no|No)
@@ -456,7 +496,7 @@ fix-kvmd-for-tvbox-armbian(){
     *)
      echo "Try again.";;
   esac
-}
+} #end fix-kvmd-for-tvbox-armbian
 
 fix-webterm() {
   echo
@@ -499,6 +539,7 @@ ls -l /dev/gpio*
 ls -l /dev/kvmd-video
 rm /dev/kvmd-video
 # Need to use video0 for orange pi (if you don't, the video capture won't work)
+# My OrangePI Zero 2 (h616) has video1
 ln -s video1 /dev/kvmd-video
 SCRIPTEND
 
@@ -512,6 +553,7 @@ set-ownership() {
   chown kvmd-ipmi:kvmd-ipmi ipmipasswd
   chown kvmd-vnc:kvmd-vnc vncpasswd
   chown kvmd-webterm /home/kvmd-webterm
+  chmod 644 /etc/kvmd/totp.secret
 
   # add kvmd user to video group (this is required in order to use CSI bridge with OMX and h264 support)
   usermod -a -G video kvmd
@@ -522,6 +564,7 @@ check-kvmd-works() {
   invalid=1
   while [ $invalid -eq 1 ]; do
     kvmd -m
+    echo
     read -p "Did kvmd -m run properly?  [y/n] " answer
     case $answer in
       n|N|no|No)
@@ -541,7 +584,7 @@ start-kvmd-svcs() {
   # 1. nginx is the webserver
   # 2. kvmd-otg is for OTG devices (keyboard/mouse, etc..)
   # 3. kvmd is the main daemon
-  systemctl restart kvmd-nginx kvmd-otg kvmd-webterm kvmd 
+  systemctl restart kvmd-nginx kvmd-otg kvmd-webterm kvmd kvmd-fix
   # systemctl status kvmd-nginx kvmd-otg kvmd-webterm kvmd 
 } # end start-kvmd-svcs
 
@@ -553,7 +596,7 @@ fix-motd() {
   # systemctl restart kvmd-webterm
 } # end fix-motd
 
-# 安装armbian的包
+# å®‰è£…armbiançš„åŒ…
 armbian-packages() {
   mkdir -p /opt/vc/bin/
   #cd /opt/vc/bin
@@ -564,6 +607,18 @@ armbian-packages() {
   cd ${APP_PATH}
   # 
 }	#end armbian-packages
+
+fix-hwCache() {
+# Fix ttl=5 error
+# Only for real Raspberry Pi HW you need that for Hardware, i think, mybee
+sed -i 's/@async_lru.alru_cache(maxsize=1, ttl=5)/@async_lru.alru_cache(maxsize=1)/g' /usr/local/lib/"python${PYTHON_VERSION}"/dist-packages/kvmd/apps/kvmd/api/export.py
+sync
+}
+
+fix-aiogp() {
+sed -i 's/def __parse_event(self, event: gpiod.EdgeEvent) -> tuple\[int, bool\]:/def __parse_event(self, event: gpiod.LineEvent) -> tuple\[int, bool\]:/g' /usr/local/lib/"python${PYTHON_VERSION}"/dist-packages/kvmd/aiogp.py
+sync
+}
 
 ### MAIN STARTS HERE ###
 # Install is done in two parts
@@ -583,14 +638,14 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   install-dependencies
   otg-devices
   armbian-packages
-  systemctl disable --now janus
+  systemctl disable --now janus >/dev/null 2>&1
   fix-kvmd-for-tvbox-armbian
-  
+      
   # Fix paste-as-keys if running python 3.7
   if [[ $( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 ) == "3.7" ]]; then
     sed -i -e 's/reversed//g' $PYTHONDIR/kvmd/keyboard/printer.py
   fi
-
+  sync
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
   press-enter
@@ -603,13 +658,18 @@ else
   fix-motd
   set-ownership 
   create-kvmdfix
+  fix-hwCache
+  fix-aiogp
   check-kvmd-works
   enable-kvmd-svcs
   start-kvmd-svcs
-
+  sync
   printf "\nCheck kvmd devices\n\n" 
   ls -l /dev/kvmd*
   printf "\nYou should see devices for keyboard, mouse, and video.\n"
-
-  printf "\nPoint a browser to https://$(hostname)\nIf it doesn't work, then reboot one last time.\nPlease make sure kvmd services are running after reboot.\n"
+  sync
+  printf "\nPoint a browser to https://$(hostname)   ,   or mybee https://$(hostname).local\n     Login: admin/admin\n\nPlease make sure kvmd services are running after reboot.\n"
+  printf "\nI make Reboot for you...\n"
+  press-enter
+  reboot
 fi
