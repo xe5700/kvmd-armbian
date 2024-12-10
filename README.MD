@@ -34,13 +34,9 @@ Original Script [https://kvmnerds.com/RPiKVM/install-pikvm-raspbian.sh]
 - Modify your dtb file to enable otg feature. Change dr_mode from host to peripheral for otg usb port.
 - If you use rk322x (rk3228A rk3228B rk3229) series chipset, you can use dtb/4.4/rk332x-box.dtb 
 ## Step 3
-<<<<<<< HEAD
 
 ```
 git clone https://github.com/xe5700/kvmd-armbian.git
-=======
-git clone https://github.com/toss-a/pikvm-armbian.git
->>>>>>> origin/dev
 cd kvmd-armbian
 ./install.sh
 ```
@@ -63,8 +59,5 @@ cd kvmd-armbian
     
 ## Version 2.0
     Now support download hook, config file, diffrent version of kvmd, and fix lots of bug. 
-<<<<<<< HEAD
-=======
 ## Version 2.1
     Fix #8 #7 #15, allow custom apt manager tools.
->>>>>>> origin/dev
