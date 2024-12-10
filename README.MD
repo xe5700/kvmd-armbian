@@ -1,5 +1,8 @@
 # KVMD-ARMBIAN
 This project support non Raspberry Pi device to running pikvm on armbian
+You other project based on pikvm 
+fork version of kvmd-armbian https://github.com/srepac/kvmd-armbian
+onekvm project https://github.com/mofeng-git/One-KVM
 # Install
 KVMD Install for armbian
 It support Allwinner, Amlogic and Rockchip based tv box, tested on phicomm n1, mxq pro 4k, tqc a01. 
