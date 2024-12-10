@@ -88,15 +88,17 @@ CSIOVERRIDE
   fi
 } # end create-override
 
-install-python-packages() { 
+install-python-packages() {
+pkgs=""
   for i in $( echo "aiofiles appdirs asn1crypto async-timeout bottle cffi chardet click 
 colorama cryptography dateutil dbus dev hidapi idna libgpiod marshmallow more-itertools multidict netifaces 
 packaging passlib pillow ply psutil pycparser pyelftools pyghmi pygments pyparsing requests semantic-version 
 setproctitle setuptools six spidev systemd tabulate urllib3 wrapt xlib yaml yarl" )
   do
-    echo "apt-get install python3-$i -y"
-    apt-get install python3-$i -y > /dev/null
+    pkgs="$pkgs python3-$i"
   done
+  echo "-> Install python packages"
+  $APT_EXE install $pkgs -y > /dev/null
   # U
   pip3 install dbus_next==0.2.3 zstandard==0.18.0 pyserial==3.5 aiohttp==3.8.3
 } # end install python-packages
@@ -117,8 +119,8 @@ install-tc358743() {
   echo "deb https://www.linux-projects.org/listing/uv4l_repo/raspbian/stretch stretch main" | tee /etc/apt/sources.list.d/uv4l.list
 
   apt-get update > /dev/null
-  echo "apt-get install uv4l-tc358743-extras -y" 
-  apt-get install uv4l-tc358743-extras -y > /dev/null
+  echo "$APT_EXE install uv4l-tc358743-extras -y" 
+  $APT_EXE install uv4l-tc358743-extras -y > /dev/null
 } # install package for tc358743
 
 boot-files() { 
@@ -158,7 +160,6 @@ boot-files() {
   printf "\n/etc/modules\n\n"
   cat /etc/modules
 } # end of necessary boot files
-
 get-packages() { 
   printf "\n\n-> Getting Pi-KVM packages from ${PIKVMREPO}\n\n"
   mkdir -p "${KVMDCACHE}"
@@ -169,7 +170,12 @@ get-packages() {
   gpg --keyserver keyserver.ubuntu.com --recv-keys $PIKVM_KEY
   gpg -a --export $PIKVM_KEY | apt-key add -
   # Download each of the pertinent packages for Rpi4, webterm, and the main service
-  for pkg in `egrep 'janus|kvmd' "${PKGINFO}" | grep -v sig | cut -d'>' -f1 | cut -d'"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'`
+  PIKVM_PKGS_CMD="egrep 'janus|kvmd' \"${PKGINFO}\" | grep -v sig | cut -d'>' -f1 | cut -d'\"' -f2 | egrep -v 'fan|oled' | egrep 'janus|pi4|webterm|kvmd-[0-9]'"
+  if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
+    PIKVM_PKGS_CMD="$PIKVM_PKGS_CMD | egrep -v 'kvmd-[0-9]'"
+  fi
+  PIKVM_PKGS=`$PIKVM_PKGS_CMD`
+  for pkg in $PIKVM_PKGS
   do
     rm -f "${KVMDCACHE}/$pkg.sig"
     download "${PIKVMREPO}/$pkg.sig" "${KVMDCACHE}/$pkg.sig"
@@ -209,43 +215,37 @@ install-kvmd-pkgs() {
   INSTLOG="${KVMDCACHE}/installed_ver.txt"; rm -f "$INSTLOG"
   date > $INSTLOG 
 
-# uncompress platform package first
-  for i in $( ls "${KVMDCACHE}/${platform}-*.tar.xz" )
-  do
-    echo "-> Extracting package $i into /" >> "$INSTLOG" 
-    tar -vxf "$i"
-  done
+# # uncompress platform package first
+#   for i in $( ls "${KVMDCACHE}/${platform}-*.tar.xz" )
+#   do
+#     echo "-> Extracting package $i into /" >> "$INSTLOG" 
+#     tar -vxf "$i"
+#   done
 
 # then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls "${KVMDCACHE}/*.tar.xz" | egrep 'kvmd-[0-9]' )
+
+  for i in $PIKVM_PKGS
   do
     echo "-> Extracting package $i into /" >> "$INSTLOG"
-    if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
-      tar -vxf $i --exclude=/usr/lib/python3.10/*
-    else
-      tar -vxf $i
-    fi
+    tar -vxf $i
   done
   if [ $CUSTOM_KVMD_VERSION -eq 1 ]; then
   # Use custom kvmd version replace kvmd offical package
-    apt install python3-setuptools -y
-    rm "${KVMDCACHE}/kvmd.tar.gz"
-    download ${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz "${KVMDCACHE}/kvmd.tar.gz"
-    mkdir -p /tmp/kvmd-tmp
-    tar axf "${KVMDCACHE}/kvmd.tar.gz" -C /tmp/kvmd-tmp
-    cd "/tmp/kvmd-tmp/kvmd-$KVMD_VERSION/"
+    download "${KVMD_COMMON_PKG_URL}" "${KVMDCACHE}/kvmd-common.tar.gz"
+    echo "-> Extracting common kvmd package into /" >> "$INSTLOG"
+    tar -vxf "${KVMDCACHE}/kvmd-common.tar.gz"
+    echo "-> Install custom version kvmd" >> "$INSTLOG"
+    $APT_EXE install python3-setuptools -y
+    download "${MIRROR_GITHUB}/pikvm/kvmd/archive/refs/tags/v$KVMD_VERSION.tar.gz" "${KVMDCACHE}/kvmd.tar.gz"
+    mkdir -p "${KVMDCACHE}/kvmd-tmp"
+    tar axf "${KVMDCACHE}/kvmd.tar.gz" -C "${KVMDCACHE}/kvmd-tmp"
+    cd "${KVMDCACHE}/kvmd-tmp/kvmd-$KVMD_VERSION/"
     ./setup.py install
     cd "$APP_PATH"
-    rm -rf /tmp/kvmd-tmp
+    rm -rf "${KVMDCACHE}/kvmd-tmp"
   fi
-  cp bin/* /usr/bin/
-# then uncompress, kvmd-{version}, kvmd-webterm, and janus packages 
-  for i in $( ls ${KVMDCACHE}/*.tar.xz | egrep 'janus|webterm' )
-  do
-    echo "-> Extracting package $i into /" >> "$INSTLOG"
-    tar xfJ "$i"
-  done
   cd "${APP_PATH}"
+  cp bin/* /usr/bin/
 } # end install-kvmd-pkgs
 
 fix-udevrules() { 
@@ -271,13 +271,13 @@ enable-kvmd-svcs() {
 build-ustreamer() {
   printf "\n\n-> Building ustreamer\n\n"
   # Install packages needed for building ustreamer source
-  echo "apt install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
-  apt install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
+  echo "$APT_EXE install -y libevent-dev libjpeg-dev libbsd-dev libgpiod-dev libsystemd-dev janus-dev janus"
+  $APT_EXE install -y libevent-dev libjpeg-dev libbsd-dev libsystemd-dev
   if [[ $USE_GPIO -eq 1 ]]; then
-    apt install -y libgpiod-dev
+    $APT_EXE install -y libgpiod-dev
   fi
   if [[ $USE_JANUS -eq 1 ]]; then
-    apt install -y janus-dev janus
+    $APT_EXE install -y janus-dev janus
   fi
   # Download ustreamer source and build it
   cd /tmp
@@ -299,23 +299,25 @@ install-dependencies() {
   echo "-> Installing dependencies for pikvm"
 
   apt-get update > /dev/null
-  for i in $( echo "nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq" )
-  do
-    echo "apt-get install -y $i"
-    apt-get install -y $i > /dev/null
-  done
-
+  # for i in $( echo "" )
+  # do
+  #   echo "$APT_EXE install -y $i"
+  #   $APT_EXE install -y $i > /dev/null
+  # done
+  echo "-> Install basic packages"
+  $APT_EXE install -y nginx python3 bc expect v4l-utils gpiod dialog git python3-pip tesseract-ocr tesseract-ocr-chi-sim jq
   install-python-packages
 
   echo "-> Make tesseract data link"
   ln -s /usr/share/tesseract-ocr/*/tessdata /usr/share/tessdata
 
   echo "-> Install TTYD"
-  apt install -y ttyd
+  $APT_EXE install -y ttyd
   if [ ! -e /usr/bin/ttyd ]; then
+    echo "-> Download from apt failed, try download offical lastest version binary file."
     # Build and install ttyd
     # cd /tmp
-    # apt-get install -y build-essential cmake git libjson-c-dev libwebsockets-dev
+    # $APT_EXE install -y build-essential cmake git libjson-c-dev libwebsockets-dev
     # git clone --depth=1 https://github.com/tsl0922/ttyd.git
     # cd ttyd && mkdir build && cd build
     # cmake ..
@@ -337,7 +339,7 @@ install-dependencies() {
   if [ ! -e /usr/bin/ustreamer ]; then
     # apt install ustreamer
     cd /tmp/
-	  apt-get install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
+	  $APT_EXE install -y libevent-2.1-7 libevent-core-2.1-7 libevent-pthreads-2.1-7 build-essential
     # ### required dependent packages for ustreamer ###
     build-ustreamer
     cd ${APP_PATH}
@@ -355,8 +357,8 @@ MYSCRIPT
 
   chmod +x /tmp/syspath.py
 
-  PYTHONDIR_SYS=$( /tmp/syspath.py | grep packages | sed -e 's/, /\n/g' -e 's/\[//g' -e 's/\]//g' -e "s+'++g" | tail -1 )
-  PYTHONDIR_PIP=$( python3 -c "import site; print(site.getsitepackages()[0])" )
+  export PYTHONDIR_SYS=$( /tmp/syspath.py | grep packages | sed -e 's/, /\n/g' -e 's/\[//g' -e 's/\]//g' -e "s+'++g" | tail -1 )
+  export PYTHONDIR_PIP=$( python3 -c "import site; print(site.getsitepackages()[0])" )
 } # end python-pkg-dir
 
 fix-nginx-symlinks() {
@@ -408,7 +410,7 @@ fix-kvmd-for-tvbox-armbian(){
   # 打补丁来移除一些对armbian和电视盒子不太支持的特性
   python-pkg-dir
   if [[ "$CUSTOM_KVMD_VERSION" -eq 1 ]]; then
-    cd $PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py*.egg/
+    cd "$PYTHONDIR_PIP/kvmd-$KVMD_VERSION-py${PYTHON_VERSION}.egg"
   else
     cd $PYTHONDIR_PIP
   fi
@@ -436,12 +438,12 @@ fix-kvmd-for-tvbox-armbian(){
       PATCH_VER="v3.84-v3.134"
     fi
     if [ ! -z "$PATCH_VER" ]; then
-      $GIT_EXE apply ${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch
+      sh -c "$GIT_EXE apply '${APP_PATH}/patches/disable_gpio/$PATCH_VER/*.patch'"
     fi
   fi
   if [ `expr $KVMD_SV \>= 84` -eq 1 ] && [ `expr $KVMD_SV \<= 92` -eq 1 ]; then
       PATCH_VER="v3.84-v3.92"
-      $GIT_EXE apply ${APP_PATH}/patches/genernal/$PATCH_VER/*.patch
+      sh -c "$GIT_EXE apply '${APP_PATH}/patches/genernal/$PATCH_VER/*.patch'"
   fi
   cd ${APP_PATH}
   read -p "Do you want to apply custom patches?  [y/n] " answer
@@ -564,13 +566,14 @@ armbian-packages() {
   cd ${APP_PATH}
   # 
 }	#end armbian-packages
-
+$APT_EXE update
+$APT_EXE -y install python3 xz-utils tar wget aria2 curl
 ### MAIN STARTS HERE ###
 # Install is done in two parts
 # First part requires a reboot in order to create kvmd users and groups
 # Second part will start the necessary kvmd services
 # added option to re-install by adding -f parameter (for use as platform switcher)
-PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
+export PYTHON_VERSION=$( python3 -V | awk '{print $2}' | cut -d'.' -f1,2 )
 if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
   printf "\nRunning part 1 of PiKVM installer script for Raspbian by @srepac\n"
   get-packages
@@ -591,6 +594,8 @@ if [[ $( grep kvmd /etc/passwd | wc -l ) -eq 0 || "$1" == "-f" ]]; then
     sed -i -e 's/reversed//g' $PYTHONDIR/kvmd/keyboard/printer.py
   fi
 
+  sync
+  echo "-> Synced data, you can reboot system safety."
   printf "\n\nReboot is required to create kvmd users and groups.\nPlease re-run this script after reboot to complete the install.\n"
   # Ask user to press CTRL+C before reboot or ENTER to proceed with reboot
   press-enter
@@ -607,6 +612,7 @@ else
   enable-kvmd-svcs
   start-kvmd-svcs
 
+  sync
   printf "\nCheck kvmd devices\n\n" 
   ls -l /dev/kvmd*
   printf "\nYou should see devices for keyboard, mouse, and video.\n"

@@ -1,8 +1,12 @@
 # KVMD-ARMBIAN
 This project support non Raspberry Pi device to running pikvm on armbian
-You other project based on pikvm 
+You can try other project based on pikvm 
 fork version of kvmd-armbian https://github.com/srepac/kvmd-armbian
 onekvm project https://github.com/mofeng-git/One-KVM
+
+# Chinese installation steps
+Chinese installation steps by toss-a [https://github.com/xe5700/pikvm-armbian/blob/master/README-zh-CN.MD]
+
 # Install
 KVMD Install for armbian
 It support Allwinner, Amlogic and Rockchip based tv box, tested on phicomm n1, mxq pro 4k, tqc a01. 
@@ -30,9 +34,13 @@ Original Script [https://kvmnerds.com/RPiKVM/install-pikvm-raspbian.sh]
 - Modify your dtb file to enable otg feature. Change dr_mode from host to peripheral for otg usb port.
 - If you use rk322x (rk3228A rk3228B rk3229) series chipset, you can use dtb/4.4/rk332x-box.dtb 
 ## Step 3
+<<<<<<< HEAD
 
 ```
 git clone https://github.com/xe5700/kvmd-armbian.git
+=======
+git clone https://github.com/toss-a/pikvm-armbian.git
+>>>>>>> origin/dev
 cd kvmd-armbian
 ./install.sh
 ```
@@ -55,3 +63,8 @@ cd kvmd-armbian
     
 ## Version 2.0
     Now support download hook, config file, diffrent version of kvmd, and fix lots of bug. 
+<<<<<<< HEAD
+=======
+## Version 2.1
+    Fix #8 #7 #15, allow custom apt manager tools.
+>>>>>>> origin/dev
